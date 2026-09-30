@@ -1,0 +1,9 @@
+{
+  "name": "رفّ | نظام المخزون والكاشير",
+  "short_name": "رفّ",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f4",
+  "theme_color": "#176d4d",
+  "icons": []
+}

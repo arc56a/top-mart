@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f3f5ef">
-  <title>رفّ | إدارة المخزون</title>
+  <meta name="theme-color" content="#176d4d">
+  <link rel="manifest" href="manifest.json">
+  <title>رفّ | نظام المخزون والكاشير</title>
   <style>
     :root {
       color-scheme: light;
-      --paper: #f3f5ef;
-      --ink: #18271f;
-      --muted: #718078;
-      --line: #dce3db;
+      --paper: #f4f6f4;
+      --ink: #111e17;
+      --muted: #627268;
+      --line: #d2dbd3;
       --green: #176d4d;
-      --green-dark: #10553b;
+      --green-dark: #105238;
       --lime: #d8ee9c;
       --white: #fff;
       --danger: #bd4936;
@@ -22,270 +23,506 @@
     body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: Tahoma, "Segoe UI", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     button, input { font: inherit; }
     button { cursor: pointer; }
-    .app { width: min(100%, 560px); min-height: 100vh; margin: auto; padding: 0 18px 106px; }
-    header { display: flex; align-items: center; justify-content: space-between; padding: 24px 2px 18px; }
+    .app { width: min(100%, 560px); min-height: 100vh; margin: auto; padding: 12px 16px 96px; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-mark { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 13px; background: var(--green); color: var(--lime); font-size: 22px; font-weight: 800; }
-    .brand-name { font-size: 21px; font-weight: 800; line-height: 1; }
-    .brand-caption { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; font-weight: 500; }
-    .offline { display: flex; gap: 6px; align-items: center; color: var(--green); background: #e5eee5; border-radius: 20px; padding: 7px 10px; font-size: 11px; font-weight: 700; }
-    .offline::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #56a678; }
-    .intro { padding: 12px 2px 20px; }
-    .eyebrow { color: var(--green); font-size: 12px; font-weight: 800; margin-bottom: 8px; }
-    h1 { margin: 0; font-size: clamp(25px, 7vw, 34px); letter-spacing: 0; line-height: 1.35; }
-    .intro p { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
-    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 2px 0 22px; }
-    .metric { padding: 14px 15px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.62); }
-    .metric-label { display: block; color: var(--muted); font-size: 12px; }
-    .metric strong { display: block; margin-top: 5px; font-size: 23px; }
-    .panel { display: none; animation: arrive .25s ease both; }
-    .panel.active { display: block; }
-    @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    .section-title { display: flex; align-items: center; justify-content: space-between; margin: 0 1px 12px; }
-    .section-title h2 { margin: 0; font-size: 18px; }
-    .section-title span { color: var(--muted); font-size: 12px; }
-    .scanner-frame { position: relative; display: grid; place-items: center; aspect-ratio: 1.12; min-height: 230px; overflow: hidden; border-radius: 20px; background: #15241d; color: white; }
-    .scanner-frame video { position: absolute; width: 100%; height: 100%; object-fit: cover; }
-    .camera-empty { position: relative; z-index: 1; display: flex; max-width: 250px; flex-direction: column; align-items: center; gap: 10px; padding: 22px; text-align: center; }
-    .camera-icon { display: grid; width: 62px; height: 62px; place-items: center; border-radius: 19px; background: rgba(255,255,255,.12); font-size: 27px; }
-    .camera-empty strong { font-size: 16px; }
-    .camera-empty span { color: #c5d0c8; font-size: 12px; line-height: 1.7; }
-    .scan-guide { position: absolute; z-index: 2; display: none; width: 70%; height: 29%; border: 2px solid var(--lime); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0,0,0,.24); }
-    .scanner-frame.scanning .scan-guide { display: block; }
-    .scanner-frame.scanning .camera-empty { display: none; }
-    .camera-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .button { min-height: 48px; border: 0; border-radius: 13px; padding: 0 14px; font-weight: 800; }
-    .button-primary { background: var(--green); color: white; }
-    .button-primary:active { background: var(--green-dark); }
-    .button-secondary { border: 1px solid var(--line); background: white; color: var(--ink); }
-    .camera-note { min-height: 17px; margin: 9px 3px 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
-    .manual-form { display: flex; gap: 8px; margin-top: 11px; }
-    .manual-form input { min-width: 0; flex: 1; }
-    input { width: 100%; height: 48px; border: 1px solid var(--line); border-radius: 12px; outline: none; padding: 0 13px; background: white; color: var(--ink); }
-    input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23,109,77,.1); }
-    input::placeholder { color: #99a59d; }
-    .manual-form .button { min-width: 82px; }
-    .product-result { display: none; margin-top: 15px; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: white; }
-    .product-result.visible { display: block; animation: arrive .2s ease both; }
-    .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .result-top h3 { margin: 0 0 5px; font-size: 18px; }
-    .barcode-text { color: var(--muted); direction: ltr; text-align: right; font-size: 12px; }
-    .status-chip { flex: none; padding: 6px 9px; border-radius: 20px; background: #e7f1e7; color: var(--green); font-size: 11px; font-weight: 800; }
-    .result-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 16px; }
-    .count-box { padding: 11px; border-radius: 11px; background: var(--paper); }
-    .count-box span { display: block; color: var(--muted); font-size: 11px; }
-    .count-box strong { display: block; margin-top: 4px; font-size: 22px; }
-    .unknown { display: none; margin-top: 12px; padding: 14px; border-radius: 14px; background: #fff1e9; color: #774332; font-size: 13px; line-height: 1.7; }
-    .unknown.visible { display: block; }
-    .unknown .button { width: 100%; margin-top: 10px; min-height: 43px; background: #f3d9c8; color: #563328; }
-    .form-card { padding: 17px; border: 1px solid var(--line); border-radius: 18px; background: white; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; margin: 0 2px 7px; font-size: 13px; font-weight: 800; }
-    .field small { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--green); color: var(--lime); font-size: 20px; font-weight: 800; }
+    .brand-name { font-size: 19px; font-weight: 800; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .sound-btn { background: white; border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 11px; font-weight: 700; color: var(--ink); }
+    .sound-btn.muted { color: var(--muted); background: #eaeaea; }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeIn .2s ease both; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .section-title { font-size: 16px; font-weight: 800; margin: 0 0 12px; color: var(--ink); display: flex; justify-content: space-between; align-items: center; }
+    .section-title span { color: var(--muted); font-size: 12px; font-weight: normal; }
+
+    .scanner-box { position: relative; width: 100%; aspect-ratio: 1.3; background: #0f1a14; border-radius: 16px; overflow: hidden; display: grid; place-items: center; color: white; margin-bottom: 12px; }
+    .scanner-box video { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+    .scan-placeholder { position: relative; z-index: 1; text-align: center; padding: 20px; }
+    .scan-placeholder div { font-size: 32px; margin-bottom: 8px; }
+    .scan-placeholder span { font-size: 12px; color: #b5c4bc; }
+    .scan-guide { position: absolute; z-index: 2; display: none; width: 75%; height: 32%; border: 2px solid var(--lime); border-radius: 10px; box-shadow: 0 0 0 999px rgba(0,0,0,.3); }
+    .scanner-box.scanning .scan-guide { display: block; }
+    .scanner-box.scanning .scan-placeholder { display: none; }
+
+    .button { min-height: 46px; border: 0; border-radius: 12px; padding: 0 16px; font-weight: 800; font-size: 14px; width: 100%; }
+    .btn-primary { background: var(--green); color: white; }
+    .btn-primary:active { background: var(--green-dark); }
+    .btn-secondary { background: white; border: 1px solid var(--line); color: var(--ink); }
+
+    .form-card { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
     .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    input { width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 10px; outline: none; padding: 0 12px; background: white; color: var(--ink); font-size: 14px; }
+    input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23,109,77,.1); }
     input[type=number] { direction: ltr; text-align: right; }
-    .form-submit { width: 100%; margin-top: 3px; }
-    .notice { min-height: 20px; margin: 10px 3px 0; color: var(--green); font-size: 12px; }
-    .inventory-tools { margin-bottom: 12px; }
-    .inventory-list { display: grid; gap: 9px; }
-    .inventory-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: white; }
-    .item-info { min-width: 0; }
-    .item-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-    .item-info span { display: block; margin-top: 5px; color: var(--muted); direction: ltr; text-align: right; font-size: 11px; }
-    .item-qty { flex: none; text-align: left; }
-    .item-qty strong { display: block; font-size: 15px; }
-    .item-qty span { color: var(--muted); font-size: 10px; }
-    .empty-list { padding: 24px 12px; border: 1px dashed #bdc9bf; border-radius: 14px; color: var(--muted); text-align: center; font-size: 13px; line-height: 1.8; }
-    .delete-button { flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: #fff0ed; color: var(--danger); font-size: 17px; }
-    .bottom-nav { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3, 1fr); width: min(100%, 560px); margin: auto; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(250,251,247,.95); backdrop-filter: blur(14px); }
-    .nav-button { display: grid; justify-items: center; gap: 4px; min-height: 52px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font-size: 10px; font-weight: 700; }
-    .nav-button .nav-icon { font-size: 19px; line-height: 1; }
-    .nav-button.active { background: #e6eee4; color: var(--green); }
-    @media (min-width: 600px) { .app { padding-right: 24px; padding-left: 24px; } }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+    .notice { min-height: 20px; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--green); text-align: center; }
+
+    .product-result { display: none; background: white; border: 2px solid var(--green); border-radius: 16px; padding: 16px; margin-top: 12px; }
+    .product-result.visible { display: block; animation: fadeIn .2s ease both; }
+    .result-name { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .result-barcode { font-size: 12px; color: var(--muted); direction: ltr; text-align: right; margin-bottom: 12px; }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .result-box { background: var(--paper); padding: 10px; border-radius: 10px; }
+    .result-box span { font-size: 11px; color: var(--muted); display: block; }
+    .result-box strong { font-size: 20px; display: block; margin-top: 2px; }
+
+    .error-box { display: none; background: #fdf2f0; color: #8a3222; padding: 14px; border-radius: 12px; font-size: 13px; margin-top: 12px; text-align: center; font-weight: 700; }
+    .error-box.visible { display: block; }
+
+    .inventory-list { display: grid; gap: 8px; margin-top: 10px; }
+    .inventory-row { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .item-info strong { font-size: 14px; display: block; }
+    .item-info span { font-size: 11px; color: var(--muted); direction: ltr; display: block; margin-top: 2px; text-align: right; }
+    .item-qty { text-align: left; }
+    .item-qty strong { font-size: 14px; display: block; }
+    .item-qty span { font-size: 10px; color: var(--muted); display: block; }
+    .delete-btn { width: 32px; height: 32px; border: 0; border-radius: 8px; background: #fde8e6; color: var(--danger); font-size: 16px; display: grid; place-items: center; }
+
+    .bottom-nav { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(2, 1fr); width: min(100%, 560px); margin: auto; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(244,246,244,.95); backdrop-filter: blur(10px); }
+    .nav-btn { display: grid; justify-items: center; gap: 3px; min-height: 48px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .nav-btn.active { background: #e5eee8; color: var(--green); }
   </style>
 </head>
 <body>
   <main class="app">
     <header>
-      <div class="brand"><div class="brand-mark">ر</div><div><span class="brand-name">رفّ</span><span class="brand-caption">مخزونك في متناول يدك</span></div></div>
-      <div class="offline">يعمل دون إنترنت</div>
+      <div class="brand">
+        <div class="brand-mark">رف</div>
+        <div class="brand-name">نظام المخزون</div>
+      </div>
+      <div class="header-actions">
+        <button class="sound-btn" id="sound-toggle" type="button">🔊 صوت الكاشير</button>
+      </div>
     </header>
-    <section class="intro"><div class="eyebrow">إدارة بسيطة لمتجرك</div><h1>صباح المخزون المرتّب</h1><p>امسح الباركود واعرف تفاصيل بضاعتك فورًا.</p></section>
-    <section class="summary" aria-label="ملخص المخزون">
-      <div class="metric"><span class="metric-label">الأصناف المسجلة</span><strong id="product-total">٠</strong></div>
-      <div class="metric"><span class="metric-label">إجمالي وحدات المخزن</span><strong id="stock-total">٠</strong></div>
+
+    <!-- ================= 1. قسم إضافة مادة ================= -->
+    <section class="panel active" id="add-panel">
+      <div class="section-title">إضافة مادة جديدة <span>عبر الكاميرا</span></div>
+
+      <div class="form-card">
+        <div class="scanner-box" id="add-scanner-box">
+          <video id="add-video" playsinline muted></video>
+          <div class="scan-placeholder">
+            <div>📷</div>
+            <span>اضغط تشغيل الكاميرا لقراءة الباركود</span>
+          </div>
+          <div class="scan-guide"></div>
+        </div>
+        <button class="button btn-secondary" id="add-camera-btn" type="button" style="margin-bottom: 12px;">تشغيل كاميرا المسح</button>
+
+        <form id="product-form">
+          <div class="field">
+            <label>رقم الباركود</label>
+            <input id="barcode-input" type="text" inputmode="numeric" autocomplete="off" placeholder="يتم قراءته تلقائياً أو كتابته" aria-label="رقم الباركود" required>
+          </div>
+          <div class="field">
+            <label>اسم المادة</label>
+            <input id="name-input" type="text" autocomplete="off" placeholder="مثال: سكر كيس 2 كيلو" aria-label="اسم المادة" required>
+          </div>
+          <div class="two-fields">
+            <div class="field">
+              <label>عدد المخزن</label>
+              <input id="stock-input" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="عدد المخزن" required>
+            </div>
+            <div class="field">
+              <label>عدد العرض</label>
+              <input id="display-input" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="عدد العرض" required>
+            </div>
+          </div>
+          <button class="button btn-primary" type="submit">حفظ المادة في المخزون</button>
+          <div class="notice" id="form-notice"></div>
+        </form>
+      </div>
     </section>
-    <section class="panel active" id="scan-panel">
-      <div class="section-title"><h2>قراءة منتج</h2><span>وجّه الكاميرا نحو الباركود</span></div>
-      <div class="scanner-frame" id="scanner-frame"><video id="camera-video" playsinline muted></video><div class="camera-empty"><div class="camera-icon">▥</div><strong>الكاميرا جاهزة</strong><span>اضغط بدء المسح واسمح للمتصفح باستخدام الكاميرا.</span></div><div class="scan-guide"></div></div>
-      <div class="camera-actions"><button class="button button-primary" id="camera-button" type="button">◉　بدء المسح</button><button class="button button-secondary" id="switch-add" type="button">＋　إضافة بضاعة</button></div>
-      <p class="camera-note" id="camera-note" aria-live="polite">ملاحظة: يلزم فتح الموقع عبر localhost أو HTTPS للسماح بالكاميرا. يمكن استخدام الإدخال اليدوي أدناه في أي وقت.</p>
-      <form class="manual-form" id="lookup-form"><input id="lookup-barcode" type="text" inputmode="numeric" autocomplete="off" placeholder="أدخل رقم الباركود" aria-label="رقم الباركود للبحث"><button class="button button-secondary" type="submit">بحث</button></form>
-      <article class="product-result" id="product-result" aria-live="polite"></article>
-      <div class="unknown" id="unknown-result">هذا الباركود غير مسجل في مخزونك.<button class="button" id="add-unknown" type="button">＋　إضافة هذا المنتج</button></div>
-    </section>
-    <section class="panel" id="add-panel">
-      <div class="section-title"><h2 id="form-heading">إضافة بضاعة</h2><span>تُحفظ على هذا الجهاز</span></div>
-      <form class="form-card" id="product-form">
-        <div class="field"><label for="barcode-input">باركود المنتج</label><input id="barcode-input" type="text" inputmode="numeric" autocomplete="off" placeholder="امسح أو اكتب الرقم" required><small>استخدم قارئ الباركود أو اكتبه يدويًا.</small></div>
-        <div class="field"><label for="name-input">اسم البضاعة</label><input id="name-input" type="text" autocomplete="off" placeholder="مثال: حليب كامل الدسم" required></div>
-        <div class="two-fields"><div class="field"><label for="stock-input">عدد المخزن</label><input id="stock-input" type="number" min="0" step="1" value="0" inputmode="numeric" required></div><div class="field"><label for="display-input">عدد العرض</label><input id="display-input" type="number" min="0" step="1" value="0" inputmode="numeric" required></div></div>
-        <button class="button button-primary form-submit" type="submit">حفظ البضاعة</button><div class="notice" id="form-notice" aria-live="polite"></div>
-      </form>
-    </section>
-    <section class="panel" id="inventory-panel">
-      <div class="section-title"><h2>قائمة المخزون</h2><span id="inventory-count">٠ أصناف</span></div>
-      <div class="inventory-tools"><input id="inventory-search" type="search" placeholder="ابحث بالاسم أو الباركود" aria-label="البحث في المخزون"></div>
+
+    <!-- ================= 2. قسم الكشف والبحث عن منتج ================= -->
+    <section class="panel" id="search-panel">
+      <div class="section-title">كشف وبحث عن منتج <span>كاشير وجرد</span></div>
+
+      <div class="form-card">
+        <div class="scanner-box" id="search-scanner-box">
+          <video id="search-video" playsinline muted></video>
+          <div class="scan-placeholder">
+            <div>🔍</div>
+            <span>اضغط تشغيل كاميرا الكاشير للكشف الفوري</span>
+          </div>
+          <div class="scan-guide"></div>
+        </div>
+        <button class="button btn-secondary" id="search-camera-btn" type="button" style="margin-bottom: 12px;">تشغيل كاميرا الكاشير</button>
+
+        <form id="lookup-form" style="display: flex; gap: 8px;">
+          <input id="lookup-barcode" type="text" inputmode="numeric" autocomplete="off" placeholder="أو أدخل الباركود يدويًا" aria-label="بحث بالباركود">
+          <button class="button btn-secondary" type="submit" style="width: 90px;">بحث</button>
+        </form>
+
+        <article class="product-result" id="product-result">
+          <div class="result-name" id="res-name"></div>
+          <div class="result-barcode" id="res-barcode"></div>
+          <div class="result-grid">
+            <div class="result-box">
+              <span>المخزن</span>
+              <strong id="res-stock">0</strong>
+            </div>
+            <div class="result-box">
+              <span>العرض</span>
+              <strong id="res-display">0</strong>
+            </div>
+          </div>
+        </article>
+
+        <div class="error-box" id="error-result">
+          هذا الباركود غير مسجل في النظام. انتقل لقسم "إضافة مادة" لتسجيله.
+        </div>
+      </div>
+
+      <!-- قائمة سريعة للمواد المسجلة -->
+      <div class="section-title" style="margin-top: 16px;">المواد المسجلة <span id="inventory-count">0</span></div>
+      <div style="margin-bottom: 10px;">
+        <input id="inventory-search" type="search" placeholder="بحث سريع بالاسم أو الباركود" aria-label="بحث سريع في المخزون">
+      </div>
       <div class="inventory-list" id="inventory-list"></div>
     </section>
   </main>
-  <nav class="bottom-nav" aria-label="التنقل الرئيسي">
-    <button class="nav-button active" data-panel="scan-panel" type="button"><span class="nav-icon">▥</span><span>المسح</span></button>
-    <button class="nav-button" data-panel="add-panel" type="button"><span class="nav-icon">＋</span><span>إضافة</span></button>
-    <button class="nav-button" data-panel="inventory-panel" type="button"><span class="nav-icon">▤</span><span>المخزون</span></button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-panel="add-panel" type="button">➕ إضافة مادة</button>
+    <button class="nav-btn" data-panel="search-panel" type="button">🔍 كشف وبحث</button>
   </nav>
+
   <script>
     (() => {
-      const STORAGE_KEY = "raff-inventory-v1";
+      const STORAGE_KEY = "raff-inventory-v2";
+      const SOUND_KEY = "raff-sound-v2";
       const numberFormat = new Intl.NumberFormat("ar");
       const byId = (id) => document.getElementById(id);
-      const video = byId("camera-video");
-      const cameraNote = byId("camera-note");
-      const scannerFrame = byId("scanner-frame");
-      let products = loadProducts();
-      let cameraStream = null;
-      let detector = null;
-      let animationFrame = 0;
-      let detecting = false;
-      let lastDetected = "";
-      let lastDetectedAt = 0;
 
+      let products = loadProducts();
+      let soundEnabled = localStorage.getItem(SOUND_KEY) !== "false";
+
+      // متغيرات الكاميرا لإضافة مادة
+      let addStream = null;
+      let addDetector = null;
+      let addFrameId = 0;
+      let addDetecting = false;
+
+      // متغيرات الكاميرا للكشف/البحث
+      let searchStream = null;
+      let searchDetector = null;
+      let searchFrameId = 0;
+      let searchDetecting = false;
+      let lastSearchedBarcode = "";
+      let lastSearchedAt = 0;
+
+      updateSoundUI();
+
+      // --- نظام الصوت (صوت الكاشير / الباركود) ---
+      function playCashSound() {
+        if (!soundEnabled) return;
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+
+          // Beep
+          const o1 = ctx.createOscillator();
+          const g1 = ctx.createGain();
+          o1.type = 'sine';
+          o1.frequency.setValueAtTime(1300, ctx.currentTime);
+          g1.gain.setValueAtTime(0.12, ctx.currentTime);
+          g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+          o1.connect(g1);
+          g1.connect(ctx.destination);
+          o1.start();
+          o1.stop(ctx.currentTime + 0.07);
+
+          // Cha-Ching
+          setTimeout(() => {
+            if (ctx.state === 'closed') return;
+            const o2 = ctx.createOscillator();
+            const g2 = ctx.createGain();
+            o2.type = 'triangle';
+            o2.frequency.setValueAtTime(1046.50, ctx.currentTime); // C6
+            o2.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08); // E6
+            g2.gain.setValueAtTime(0.18, ctx.currentTime);
+            g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            o2.connect(g2);
+            g2.connect(ctx.destination);
+            o2.start();
+            o2.stop(ctx.currentTime + 0.25);
+          }, 90);
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      function updateSoundUI() {
+        byId("sound-toggle").textContent = soundEnabled ? "🔊 صوت الكاشير: مفعل" : "🔇 صوت الكاشير: متوقف";
+        byId("sound-toggle").classList.toggle("muted", !soundEnabled);
+      }
+
+      byId("sound-toggle").addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        localStorage.setItem(SOUND_KEY, soundEnabled);
+        updateSoundUI();
+        if (soundEnabled) playCashSound();
+      });
+
+      // --- التخزين ---
       function loadProducts() {
         try {
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-          return Array.isArray(saved) ? saved.filter((item) => item && item.barcode) : [];
+          return Array.isArray(saved) ? saved.filter(item => item && item.barcode) : [];
         } catch { return []; }
       }
+
       function saveProducts() {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); return true; }
-        catch { byId("form-notice").textContent = "تعذر الحفظ. مساحة التخزين في المتصفح ممتلئة."; return false; }
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+          return true;
+        } catch {
+          byId("form-notice").textContent = "خطأ: الذاكرة ممتلئة.";
+          return false;
+        }
       }
-      function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-      }
-      function render() {
-        byId("product-total").textContent = numberFormat.format(products.length);
-        byId("stock-total").textContent = numberFormat.format(products.reduce((total, item) => total + (Number(item.stock) || 0), 0));
-        byId("inventory-count").textContent = `${numberFormat.format(products.length)} أصناف`;
-        renderInventory(byId("inventory-search").value);
-      }
-      function renderInventory(query = "") {
-        const needle = query.trim().toLocaleLowerCase();
-        const matches = products.filter((item) => item.name.toLocaleLowerCase().includes(needle) || item.barcode.toLocaleLowerCase().includes(needle));
-        const list = byId("inventory-list");
-        if (!matches.length) { list.innerHTML = `<div class="empty-list">${products.length ? "لا توجد نتائج مطابقة." : "لا توجد بضائع مسجلة بعد.<br>ابدأ بإضافة أول منتج."}</div>`; return; }
-        list.innerHTML = matches.map((item) => `<div class="inventory-row"><div class="item-info"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.barcode)}</span></div><div class="item-qty"><strong>${numberFormat.format(Number(item.stock) || 0)}</strong><span>مخزن · ${numberFormat.format(Number(item.display) || 0)} عرض</span></div><button class="delete-button" type="button" data-delete="${escapeHtml(item.barcode)}" aria-label="حذف ${escapeHtml(item.name)}" title="حذف المنتج">×</button></div>`).join("");
-      }
+
+      // --- التنقل بين الشاشات ---
       function showPanel(panelId) {
-        document.querySelectorAll(".panel").forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
-        document.querySelectorAll(".nav-button").forEach((button) => button.classList.toggle("active", button.dataset.panel === panelId));
-        if (panelId !== "scan-panel") stopCamera();
+        document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === panelId));
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.panel === panelId));
+
+        if (panelId !== "add-panel") stopAddCamera();
+        if (panelId !== "search-panel") stopSearchCamera();
+
         if (panelId === "add-panel") byId("barcode-input").focus({ preventScroll: true });
       }
-      function lookup(barcode) {
-        const value = barcode.trim();
-        if (!value) return;
-        byId("lookup-barcode").value = value;
-        const product = products.find((item) => item.barcode === value);
-        const result = byId("product-result");
-        const unknown = byId("unknown-result");
-        if (!product) { result.classList.remove("visible"); unknown.classList.add("visible"); return; }
-        unknown.classList.remove("visible");
-        result.innerHTML = `<div class="result-top"><div><h3>${escapeHtml(product.name)}</h3><div class="barcode-text">${escapeHtml(product.barcode)}</div></div><span class="status-chip">مسجل</span></div><div class="result-counts"><div class="count-box"><span>عدد المخزن</span><strong>${numberFormat.format(Number(product.stock) || 0)}</strong></div><div class="count-box"><span>عدد العرض</span><strong>${numberFormat.format(Number(product.display) || 0)}</strong></div></div>`;
-        result.classList.add("visible");
-        result.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-      function prepareAdd(barcode = "") {
-        showPanel("add-panel");
-        byId("barcode-input").value = barcode;
-        byId("name-input").value = "";
-        byId("stock-input").value = "0";
-        byId("display-input").value = "0";
-        byId("form-notice").textContent = "";
-      }
-      async function startCamera() {
-        if (!navigator.mediaDevices?.getUserMedia) { cameraNote.textContent = "هذا المتصفح لا يتيح الكاميرا هنا. افتح الموقع عبر localhost أو HTTPS على متصفح حديث، أو أدخل الباركود يدويًا."; return; }
-        if (!("BarcodeDetector" in window)) { cameraNote.textContent = "المتصفح لا يدعم قراءة الباركود بالكاميرا. جرّب Chrome على Android، أو استخدم قارئًا خارجيًا/الإدخال اليدوي."; return; }
+
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.addEventListener("click", () => showPanel(btn.dataset.panel));
+      });
+
+      // --- 1. قسم إضافة مادة (الكاميرا تسجل الباركود تلقائياً) ---
+      async function startAddCamera() {
+        if (!("BarcodeDetector" in window) || !navigator.mediaDevices?.getUserMedia) {
+          alert("الكاميرا أو قارئ الباركود غير مدعوم في هذا المتصفح.");
+          return;
+        }
         try {
           const supported = await BarcodeDetector.getSupportedFormats();
-          const preferred = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "qr_code"];
-          const formats = preferred.filter((format) => supported.includes(format));
-          detector = new BarcodeDetector({ formats: formats.length ? formats : supported });
-          cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
-          video.srcObject = cameraStream;
+          addDetector = new BarcodeDetector({ formats: supported });
+          addStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+          const video = byId("add-video");
+          video.srcObject = addStream;
           await video.play();
-          scannerFrame.classList.add("scanning");
-          byId("camera-button").textContent = "■　إيقاف الكاميرا";
-          cameraNote.textContent = "وجّه الإطار إلى الباركود وثبّت الهاتف للحظة.";
-          scanFrame();
-        } catch (error) {
-          stopCamera();
-          cameraNote.textContent = error.name === "NotAllowedError" ? "لم يُسمح باستخدام الكاميرا. فعّل الإذن من إعدادات المتصفح ثم أعد المحاولة." : "تعذر تشغيل الكاميرا. تأكد من عدم استخدامها في تطبيق آخر، أو أدخل الباركود يدويًا.";
+          byId("add-scanner-box").classList.add("scanning");
+          byId("add-camera-btn").textContent = "إيقاف الكاميرا";
+          scanAddLoop();
+        } catch (e) {
+          stopAddCamera();
+          alert("تعذر تشغيل الكاميرا.");
         }
       }
-      async function scanFrame() {
-        if (!cameraStream || !detector) return;
-        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && !detecting) {
-          detecting = true;
+
+      async function scanAddLoop() {
+        if (!addStream || !addDetector) return;
+        const video = byId("add-video");
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && !addDetecting) {
+          addDetecting = true;
           try {
-            const codes = await detector.detect(video);
-            if (codes.length) {
-              const value = codes[0].rawValue;
-              const now = Date.now();
-              if (value !== lastDetected || now - lastDetectedAt > 1800) { lastDetected = value; lastDetectedAt = now; lookup(value); }
+            const codes = await addDetector.detect(video);
+            if (codes.length > 0) {
+              const code = codes[0].rawValue;
+              byId("barcode-input").value = code;
+              playCashSound();
+              stopAddCamera();
+              byId("name-input").focus();
             }
-          } catch { /* Keep scanning if a frame cannot be decoded. */ }
-          detecting = false;
+          } catch {}
+          addDetecting = false;
         }
-        animationFrame = requestAnimationFrame(scanFrame);
+        addFrameId = requestAnimationFrame(scanAddLoop);
       }
-      function stopCamera() {
-        cancelAnimationFrame(animationFrame);
-        if (cameraStream) cameraStream.getTracks().forEach((track) => track.stop());
-        cameraStream = null;
-        video.srcObject = null;
-        scannerFrame.classList.remove("scanning");
-        byId("camera-button").textContent = "◉　بدء المسح";
+
+      function stopAddCamera() {
+        cancelAnimationFrame(addFrameId);
+        if (addStream) addStream.getTracks().forEach(t => t.stop());
+        addStream = null;
+        byId("add-video").srcObject = null;
+        byId("add-scanner-box").classList.remove("scanning");
+        byId("add-camera-btn").textContent = "تشغيل كاميرا المسح";
       }
-      byId("product-form").addEventListener("submit", (event) => {
-        event.preventDefault();
+
+      byId("add-camera-btn").addEventListener("click", () => {
+        if (addStream) stopAddCamera();
+        else startAddCamera();
+      });
+
+      byId("product-form").addEventListener("submit", (e) => {
+        e.preventDefault();
         const barcode = byId("barcode-input").value.trim();
         const name = byId("name-input").value.trim();
         const stock = Number(byId("stock-input").value);
         const display = Number(byId("display-input").value);
-        if (!barcode || !name || !Number.isInteger(stock) || stock < 0 || !Number.isInteger(display) || display < 0) return;
-        const existingIndex = products.findIndex((item) => item.barcode === barcode);
-        const product = { barcode, name, stock, display };
-        if (existingIndex >= 0) products[existingIndex] = product; else products.unshift(product);
+
+        if (!barcode || !name) return;
+
+        const idx = products.findIndex(p => p.barcode === barcode);
+        const item = { barcode, name, stock, display };
+
+        if (idx >= 0) products[idx] = item;
+        else products.unshift(item);
+
         if (!saveProducts()) return;
-        render();
-        byId("form-notice").textContent = existingIndex >= 0 ? "تم تحديث بيانات المنتج." : "تم حفظ المنتج على هذا الجهاز.";
+
+        byId("form-notice").textContent = "✓ تم حفظ المادة بنجاح";
+        setTimeout(() => { byId("form-notice").textContent = ""; }, 2500);
+
+        byId("barcode-input").value = "";
+        byId("name-input").value = "";
+        byId("stock-input").value = "0";
+        byId("display-input").value = "0";
+        renderInventory();
       });
-      byId("lookup-form").addEventListener("submit", (event) => { event.preventDefault(); lookup(byId("lookup-barcode").value); });
-      byId("add-unknown").addEventListener("click", () => prepareAdd(byId("lookup-barcode").value));
-      byId("switch-add").addEventListener("click", () => prepareAdd());
-      byId("camera-button").addEventListener("click", () => cameraStream ? stopCamera() : startCamera());
-      byId("inventory-search").addEventListener("input", (event) => renderInventory(event.target.value));
-      byId("inventory-list").addEventListener("click", (event) => {
-        const button = event.target.closest("[data-delete]");
-        if (!button) return;
-        products = products.filter((item) => item.barcode !== button.dataset.delete);
+
+      // --- 2. قسم الكشف والبحث (كاشير - يعرض الاسم والعدد فوراً مع صوت) ---
+      function lookupProduct(barcode) {
+        const val = barcode.trim();
+        if (!val) return;
+        byId("lookup-barcode").value = val;
+
+        const product = products.find(p => p.barcode === val);
+        const resBox = byId("product-result");
+        const errBox = byId("error-result");
+
+        if (!product) {
+          resBox.classList.remove("visible");
+          errBox.classList.add("visible");
+          return;
+        }
+
+        // قراءة صحيحة لمنتج مضاف مسبقاً -> تشغيل صوت الكاشير
+        playCashSound();
+
+        errBox.classList.remove("visible");
+        byId("res-name").textContent = product.name;
+        byId("res-barcode").textContent = product.barcode;
+        byId("res-stock").textContent = numberFormat.format(product.stock || 0);
+        byId("res-display").textContent = numberFormat.format(product.display || 0);
+        resBox.classList.add("visible");
+      }
+
+      async function startSearchCamera() {
+        if (!("BarcodeDetector" in window) || !navigator.mediaDevices?.getUserMedia) {
+          alert("الكاميرا غير مدعومة.");
+          return;
+        }
+        try {
+          const supported = await BarcodeDetector.getSupportedFormats();
+          searchDetector = new BarcodeDetector({ formats: supported });
+          searchStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+          const video = byId("search-video");
+          video.srcObject = searchStream;
+          await video.play();
+          byId("search-scanner-box").classList.add("scanning");
+          byId("search-camera-btn").textContent = "إيقاف الكاميرا";
+          scanSearchLoop();
+        } catch (e) {
+          stopSearchCamera();
+          alert("تعذر تشغيل الكاميرا.");
+        }
+      }
+
+      async function scanSearchLoop() {
+        if (!searchStream || !searchDetector) return;
+        const video = byId("search-video");
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && !searchDetecting) {
+          searchDetecting = true;
+          try {
+            const codes = await searchDetector.detect(video);
+            if (codes.length > 0) {
+              const code = codes[0].rawValue;
+              const now = Date.now();
+              if (code !== lastSearchedBarcode || now - lastSearchedAt > 1500) {
+                lastSearchedBarcode = code;
+                lastSearchedAt = now;
+                lookupProduct(code);
+              }
+            }
+          } catch {}
+          searchDetecting = false;
+        }
+        searchFrameId = requestAnimationFrame(scanSearchLoop);
+      }
+
+      function stopSearchCamera() {
+        cancelAnimationFrame(searchFrameId);
+        if (searchStream) searchStream.getTracks().forEach(t => t.stop());
+        searchStream = null;
+        byId("search-video").srcObject = null;
+        byId("search-scanner-box").classList.remove("scanning");
+        byId("search-camera-btn").textContent = "تشغيل كاميرا الكاشير";
+      }
+
+      byId("search-camera-btn").addEventListener("click", () => {
+        if (searchStream) stopSearchCamera();
+        else startSearchCamera();
+      });
+
+      byId("lookup-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        lookupProduct(byId("lookup-barcode").value);
+      });
+
+      // --- قائمة المخزون ---
+      function renderInventory(query = "") {
+        const q = query.trim().toLowerCase();
+        const filtered = products.filter(p => p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q));
+        byId("inventory-count").textContent = numberFormat.format(products.length);
+
+        const list = byId("inventory-list");
+        if (!filtered.length) {
+          list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px;">لا توجد مواد مسجلة.</div>`;
+          return;
+        }
+
+        list.innerHTML = filtered.map(p => `
+          <div class="inventory-row">
+            <div class="item-info">
+              <strong>${escapeHtml(p.name)}</strong>
+              <span>${escapeHtml(p.barcode)}</span>
+            </div>
+            <div class="item-qty">
+              <strong>${numberFormat.format(p.stock)} مخزن</strong>
+              <span>عرض: ${numberFormat.format(p.display)}</span>
+            </div>
+            <button class="delete-btn" type="button" data-del="${escapeHtml(p.barcode)}" title="حذف">×</button>
+          </div>
+        `).join("");
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      }
+
+      byId("inventory-search").addEventListener("input", (e) => {
+        renderInventory(e.target.value);
+      });
+
+      byId("inventory-list").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-del]");
+        if (!btn) return;
+        products = products.filter(p => p.barcode !== btn.dataset.del);
         saveProducts();
-        render();
+        renderInventory(byId("inventory-search").value);
       });
-      document.querySelectorAll(".nav-button").forEach((button) => button.addEventListener("click", () => showPanel(button.dataset.panel)));
-      render();
+
+      renderInventory();
     })();
   </script>
 </body>
