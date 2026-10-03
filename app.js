@@ -1,4 +1,4 @@
-// تطبيق إدارة الطلبات لـ تاپ مارت (Top Mart) - نظام إرسال الملفات بالصور والتفاصيل
+// تطبيق إدارة الطلبات لـ تاپ مارت (Top Mart) - نظام إرسال تلقائي مباشر عبر الواتساب ومشارك الملفات
 
 // حالة التطبيق (State)
 let currentCategory = "all";
@@ -40,10 +40,10 @@ function setupEventListeners() {
         });
     }
 
-    // زر إرسال ملف الطلب المرئي بالصور عبر الواتساب
+    // زر إرسال الطلب والملف تلقائياً عبر الواتساب
     const sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
     if (sendWhatsappBtn) {
-        sendWhatsappBtn.addEventListener("click", sendOrderFileViaWhatsApp);
+        sendWhatsappBtn.addEventListener("click", sendOrderAutoViaWhatsApp);
     }
 
     // زر تحميل ملف الطلب النصي TXT
@@ -255,7 +255,7 @@ function validateForm() {
     return { name, phone, address, notes };
 }
 
-// توليد ملف HTML مرئي تفاعلي يحتوي على صور البضائع واسم الزبون وتفاصيله
+// توليد ملف HTML مرئي يحتوي على الصور والمعلومات
 function generateVisualOrderHTML(customerInfo) {
     const sanitizedName = customerInfo.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const sanitizedPhone = customerInfo.phone.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -283,12 +283,10 @@ function generateVisualOrderHTML(customerInfo) {
         body { background-color: #f1f5f9; color: #1e293b; padding: 16px; direction: rtl; max-width: 480px; margin: 0 auto; }
         .header { background: #059669; color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(5,150,105,0.2); }
         .header h1 { font-size: 1.25rem; font-weight: bold; }
-        .header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
         .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .card h2 { font-size: 1rem; color: #059669; margin-bottom: 12px; border-bottom: 2px solid #ecfdf5; padding-bottom: 6px; }
         .info-row { font-size: 0.9rem; margin-bottom: 8px; line-height: 1.4; }
         .info-row strong { color: #0f172a; }
-        .footer-note { text-align: center; font-size: 0.8rem; color: #64748b; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -310,48 +308,61 @@ function generateVisualOrderHTML(customerInfo) {
         <h2>📦 البضائع المطلوبة بالصور (${cart.reduce((sum, item) => sum + item.quantity, 0)} مادة)</h2>
         ${itemsHTML}
     </div>
-
-    <div class="footer-note">
-        تم توليد هذا الملف تلقائياً عبر تطبيق تاپ مارت لطلب البضائع.
-    </div>
 </body>
 </html>`;
 }
 
-// تنزيل ملف الطلب المرئي بحجم وخيار HTML وإرسال توجيه عبر الواتساب
-function sendOrderFileViaWhatsApp() {
+// الإرسال التلقائي عبر الواتساب والمشاركة المباشرة للملف
+async function sendOrderAutoViaWhatsApp() {
     const customerInfo = validateForm();
     if (!customerInfo) return;
 
-    // 1. إنشاء وتحميل ملف HTML المصور
-    const htmlContent = generateVisualOrderHTML(customerInfo);
     const fileName = `طلب_${customerInfo.name.replace(/\s+/g, "_")}.html`;
+    const htmlContent = generateVisualOrderHTML(customerInfo);
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const file = new File([blob], fileName, { type: "text/html" });
 
-    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(link.href);
+    // 1. محاولة المشاركة التلقائية للملف عبر مشاركة الهاتف المباشرة (Web Share API)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: `طلب بضاعة - ${customerInfo.name}`,
+                text: `🛒 طلب جديد من الزبون ${customerInfo.name} عبر تاپ مارت`
+            });
+            return; // تم التوجيه والمشاركة بنجاح
+        } catch (err) {
+            console.log("إغلاق نافذة المشاركة، الانتقال للإرسال المباشر النصي...");
+        }
+    }
 
-    // 2. إعداد رسالة الواتساب المرفقة بملف الطلب
-    let message = `🛍️ *طلب بضاعة جديد من ${STORE_CONFIG.storeName}*\n`;
+    // 2. إذا لم تدعم البيئة مشاركة الملفات المباشرة، يتم فتح محادثة الواتساب فوراً برسالة كاملة ومنسقة
+    let message = `🛒 *طلب بضاعة جديد - ${STORE_CONFIG.storeName}*\n`;
     message += `---------------------------------\n`;
-    message += `👤 *الاسم:* ${customerInfo.name}\n`;
-    message += `📞 *الهاتف:* ${customerInfo.phone}\n`;
+    message += `👤 *اسم الزبون:* ${customerInfo.name}\n`;
+    message += `📞 *رقم الهاتف:* ${customerInfo.phone}\n`;
     message += `📍 *العنوان:* ${customerInfo.address}\n`;
+    if (customerInfo.notes) {
+        message += `📝 *ملاحظات:* ${customerInfo.notes}\n`;
+    }
     message += `---------------------------------\n`;
-    message += `📎 *قمت بتنزيل ملف الطلب المصور (${fileName}) الذي يحتوي على كافة الصور والكميات المختارة.*\n\n`;
-    message += `يرجى فتح الملف المرفق لتجهيز الطلب. شكراً لكم!`;
+    message += `📦 *تفاصيل البضائع والكميات المختارة:*\n\n`;
+
+    cart.forEach((item, index) => {
+        message += `${index + 1}. *${item.product.name}*\n`;
+        message += `   الكمية: ${item.quantity} (${item.product.unit})\n`;
+        message += `   🔗 صورة المادة: ${item.product.image}\n\n`;
+    });
+
+    message += `---------------------------------\n`;
+    message += `إجمالي المواد: ${cart.reduce((sum, item) => sum + item.quantity, 0)} مادة\n`;
+    message += `تاريخ الطلب: ${new Date().toLocaleString('ar-EG')}`;
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${encodedMessage}`;
 
-    // 3. تنبيه الزبون ليرفق الملف في محادثة الواتساب
-    setTimeout(() => {
-        alert(`تم تنزيل ملف الطلب (${fileName}) على جهازك بنجاح!\n\nيرجى الضغط على زر المرفقات 📎 في الواتساب وإرسال الملف لتظهر صور المنتجات والكميات بوضوح للماركت.`);
-        window.open(whatsappUrl, "_blank");
-    }, 600);
+    // فتح الواتساب فوراً وبشكل تلقائي بدون خطوات إضافية
+    window.open(whatsappUrl, "_blank");
 }
 
 // تحميل ملف الطلب النصي TXT
