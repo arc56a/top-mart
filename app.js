@@ -1,4 +1,4 @@
-// تطبيق إدارة الطلبات لـ تاپ مارت (Top Mart) - نظام إرسال تلقائي مباشر عبر الواتساب ومشارك الملفات
+// تطبيق إدارة الطلبات لـ تاپ مارت (Top Mart) - نظام الإرسال المباشر للرقم المخصص
 
 // حالة التطبيق (State)
 let currentCategory = "all";
@@ -40,16 +40,16 @@ function setupEventListeners() {
         });
     }
 
-    // زر إرسال الطلب والملف تلقائياً عبر الواتساب
+    // زر الإرسال المباشر لمحادثة الواتساب للرقم 07715051193
     const sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
     if (sendWhatsappBtn) {
-        sendWhatsappBtn.addEventListener("click", sendOrderAutoViaWhatsApp);
+        sendWhatsappBtn.addEventListener("click", sendOrderDirectToWhatsApp);
     }
 
-    // زر تحميل ملف الطلب النصي TXT
+    // زر تحميل ملف الطلب المصور HTML
     const downloadOrderBtn = document.getElementById("downloadOrderBtn");
     if (downloadOrderBtn) {
-        downloadOrderBtn.addEventListener("click", downloadOrderFileTxt);
+        downloadOrderBtn.addEventListener("click", downloadOrderFileHtml);
     }
 }
 
@@ -255,8 +255,44 @@ function validateForm() {
     return { name, phone, address, notes };
 }
 
-// توليد ملف HTML مرئي يحتوي على الصور والمعلومات
-function generateVisualOrderHTML(customerInfo) {
+// الإرسال المباشر لمحادثة الواتساب للرقم 07715051193 مباشرة وبدون أزرار مشاركة
+function sendOrderDirectToWhatsApp() {
+    const customerInfo = validateForm();
+    if (!customerInfo) return;
+
+    let message = `🛒 *طلب بضاعة جديد - ${STORE_CONFIG.storeName}*\n`;
+    message += `---------------------------------\n`;
+    message += `👤 *اسم الزبون:* ${customerInfo.name}\n`;
+    message += `📞 *رقم الهاتف:* ${customerInfo.phone}\n`;
+    message += `📍 *العنوان:* ${customerInfo.address}\n`;
+    if (customerInfo.notes) {
+        message += `📝 *ملاحظات:* ${customerInfo.notes}\n`;
+    }
+    message += `---------------------------------\n`;
+    message += `📦 *البضائع والكميات المطلوبة:*\n\n`;
+
+    cart.forEach((item, index) => {
+        message += `${index + 1}. *${item.product.name}*\n`;
+        message += `   الكمية: ${item.quantity} (${item.product.unit})\n`;
+        message += `   🖼️ صورة المادة: ${item.product.image}\n\n`;
+    });
+
+    message += `---------------------------------\n`;
+    message += `إجمالي عدد المواد: ${cart.reduce((sum, item) => sum + item.quantity, 0)} مادة\n`;
+    message += `📅 تاريخ الطلب: ${new Date().toLocaleString('ar-EG')}`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${encodedMessage}`;
+
+    // فتح محادثة الواتساب المخصصة فوراً بدون نوافذ اختيار
+    window.location.href = whatsappUrl;
+}
+
+// توليد وتحميل ملف الطلب المصور HTML (اختياري)
+function downloadOrderFileHtml() {
+    const customerInfo = validateForm();
+    if (!customerInfo) return;
+
     const sanitizedName = customerInfo.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const sanitizedPhone = customerInfo.phone.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const sanitizedAddress = customerInfo.address.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -272,7 +308,7 @@ function generateVisualOrderHTML(customerInfo) {
         </div>
     `).join("");
 
-    return `<!DOCTYPE html>
+    const htmlContent = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -310,94 +346,12 @@ function generateVisualOrderHTML(customerInfo) {
     </div>
 </body>
 </html>`;
-}
-
-// الإرسال التلقائي عبر الواتساب والمشاركة المباشرة للملف
-async function sendOrderAutoViaWhatsApp() {
-    const customerInfo = validateForm();
-    if (!customerInfo) return;
 
     const fileName = `طلب_${customerInfo.name.replace(/\s+/g, "_")}.html`;
-    const htmlContent = generateVisualOrderHTML(customerInfo);
-    const blob = new Blob([htmlContent], { type: "text/html" });
-    const file = new File([blob], fileName, { type: "text/html" });
-
-    // 1. محاولة المشاركة التلقائية للملف عبر مشاركة الهاتف المباشرة (Web Share API)
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-            await navigator.share({
-                files: [file],
-                title: `طلب بضاعة - ${customerInfo.name}`,
-                text: `🛒 طلب جديد من الزبون ${customerInfo.name} عبر تاپ مارت`
-            });
-            return; // تم التوجيه والمشاركة بنجاح
-        } catch (err) {
-            console.log("إغلاق نافذة المشاركة، الانتقال للإرسال المباشر النصي...");
-        }
-    }
-
-    // 2. إذا لم تدعم البيئة مشاركة الملفات المباشرة، يتم فتح محادثة الواتساب فوراً برسالة كاملة ومنسقة
-    let message = `🛒 *طلب بضاعة جديد - ${STORE_CONFIG.storeName}*\n`;
-    message += `---------------------------------\n`;
-    message += `👤 *اسم الزبون:* ${customerInfo.name}\n`;
-    message += `📞 *رقم الهاتف:* ${customerInfo.phone}\n`;
-    message += `📍 *العنوان:* ${customerInfo.address}\n`;
-    if (customerInfo.notes) {
-        message += `📝 *ملاحظات:* ${customerInfo.notes}\n`;
-    }
-    message += `---------------------------------\n`;
-    message += `📦 *تفاصيل البضائع والكميات المختارة:*\n\n`;
-
-    cart.forEach((item, index) => {
-        message += `${index + 1}. *${item.product.name}*\n`;
-        message += `   الكمية: ${item.quantity} (${item.product.unit})\n`;
-        message += `   🔗 صورة المادة: ${item.product.image}\n\n`;
-    });
-
-    message += `---------------------------------\n`;
-    message += `إجمالي المواد: ${cart.reduce((sum, item) => sum + item.quantity, 0)} مادة\n`;
-    message += `تاريخ الطلب: ${new Date().toLocaleString('ar-EG')}`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${encodedMessage}`;
-
-    // فتح الواتساب فوراً وبشكل تلقائي بدون خطوات إضافية
-    window.open(whatsappUrl, "_blank");
-}
-
-// تحميل ملف الطلب النصي TXT
-function downloadOrderFileTxt() {
-    const customerInfo = validateForm();
-    if (!customerInfo) return;
-
-    let fileContent = `=======================================\n`;
-    fileContent += `       طلب بضاعة - ${STORE_CONFIG.storeName}\n`;
-    fileContent += `=======================================\n\n`;
-    fileContent += `معلومات الزبون:\n`;
-    fileContent += `  الاسم الكامل: ${customerInfo.name}\n`;
-    fileContent += `  رقم الهاتف:  ${customerInfo.phone}\n`;
-    fileContent += `  العنوان:      ${customerInfo.address}\n`;
-    if (customerInfo.notes) {
-        fileContent += `  ملاحظات:     ${customerInfo.notes}\n`;
-    }
-    fileContent += `\n---------------------------------------\n`;
-    fileContent += `تفاصيل البضائع المطلوبة:\n`;
-    fileContent += `---------------------------------------\n`;
-
-    cart.forEach((item, index) => {
-        fileContent += `${index + 1}. ${item.product.name}\n`;
-        fileContent += `   الكمية المطلوب توصيلها: ${item.quantity} ${item.product.unit}\n\n`;
-    });
-
-    fileContent += `---------------------------------------\n`;
-    fileContent += `إجمالي عدد البضائع: ${cart.reduce((sum, item) => sum + item.quantity, 0)} مادة\n`;
-    fileContent += `تاريخ الطلب: ${new Date().toLocaleString('ar-EG')}\n`;
-    fileContent += `=======================================\n`;
-
-    const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `طلب_${customerInfo.name.replace(/\s+/g, "_")}.txt`;
+    link.download = fileName;
     link.click();
     URL.revokeObjectURL(link.href);
 }
