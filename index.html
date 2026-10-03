@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تاپ مارت - اختيار البضائع والطلب</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- حاوية الهاتف بنسبة 9:16 (Phone Frame Container) -->
+    <div class="phone-screen-container">
+
+        <!-- الهيدر العلوي -->
+        <header class="app-header">
+            <div class="header-title">
+                <h1>🛍️ تاپ مارت - Top Mart</h1>
+                <p>اختر الأقسام والبضائع وسجل طلبك بسهولة</p>
+            </div>
+            <button class="cart-icon-btn" id="cartIconBtn" aria-label="عرض السلة">
+                <span>🛒 السلة</span>
+                <span class="cart-badge" id="cartBadge">0</span>
+            </button>
+        </header>
+
+        <!-- المحتوى الرئيسي للموبايل -->
+        <main class="container">
+
+            <!-- حقل البحث -->
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث عن مادة أو منتج..." aria-label="ابحث عن مادة أو منتج" />
+            </div>
+
+            <!-- أزرار الأقسام الخمسة الرئيسية -->
+            <div class="categories-wrapper" id="categoriesWrapper">
+                <!-- يتم تعبئتها ديناميكياً عن طريق JavaScript -->
+            </div>
+
+            <!-- شبكة المنتجات -->
+            <div class="products-grid" id="productsGrid">
+                <!-- يتم عرض المنتجات هنا -->
+            </div>
+
+        </main>
+
+        <!-- الشريط السفلي العائم (للموبايل) -->
+        <div class="floating-cart-bar" id="floatingCartBar" style="display: none;">
+            <div class="cart-summary-text">
+                <span class="cart-summary-count" id="summaryCount">0 مواد مختارة</span>
+            </div>
+            <button class="view-cart-btn" id="viewCartBtn">تأكيد وإرسال الطلب 🛒</button>
+        </div>
+
+        <!-- نافذة المواد المختارة والاستمارة (Modal / Drawer) -->
+        <div class="modal-overlay" id="cartModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📋 استمارة وتأكيد الطلب</h2>
+                    <button class="close-btn" id="closeCartBtn">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- 1. استمارة معلومات الزبون أولاً (ثابتة في البداية) -->
+                    <div class="form-section-fixed">
+                        <h3>👤 معلومات الزبون (أولاً)</h3>
+                        <div class="form-group">
+                            <label for="custName">الاسم الكامل <span style="color:red;">*</span></label>
+                            <input type="text" id="custName" class="form-input" placeholder="أدخل اسمك الكامل..." required />
+                        </div>
+                        <div class="form-group">
+                            <label for="custPhone">رقم الهاتف <span style="color:red;">*</span></label>
+                            <input type="tel" id="custPhone" class="form-input" placeholder="مثال: 07701234567" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="custAddress">العنوان التفصيلي <span style="color:red;">*</span></label>
+                            <input type="text" id="custAddress" class="form-input" placeholder="المنطقة / الشارع / أقرب نقطة دالة..." required />
+                        </div>
+                        <div class="form-group">
+                            <label for="custNotes">ملاحظات إضافية (اختياري)</label>
+                            <textarea id="custNotes" class="form-textarea" rows="2" placeholder="أي ملاحظات حول نوعية البضاعة أو التوصيل..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. قائمة المواد المختارة ثانياً (تحت الاستمارة) -->
+                    <div class="cart-items-section">
+                        <h3 class="section-subtitle">📦 البضائع المختارة لتحتها:</h3>
+                        <div class="cart-items-list" id="modalCartItems">
+                            <!-- تعبئة عناصر السلة هنا -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="modal-total-row">
+                        <span>إجمالي المواد المختارة:</span>
+                        <span id="modalTotalItemsCount">0 مواد</span>
+                    </div>
+                    <button class="submit-whatsapp-btn" id="sendWhatsappBtn">
+                        📲 إرسال ملف الطلب (مع الصور) عبر الواتساب
+                    </button>
+                    <button class="download-file-btn" id="downloadOrderBtn">
+                        📄 تحميل ملف نصي فقط (TXT)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- البرمجيات -->
+    <script src="products.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
