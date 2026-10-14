@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>توب مارت - نظام تجهيز الطلبات</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="description" content="نظام احترافي وسريع لتجهيز ومتابعة طلبات سوبرماركت توب مارت محلياً بدون إنترنت">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="توب مارت">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+
+    <!-- Google Fonts: Cairo & Plus Jakarta Sans for Arabic & Numerals -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ================= MAIN SCREEN VIEW ================= -->
+        <div id="mainView" class="view-panel">
+            <!-- App Header -->
+            <header class="app-header">
+                <div class="header-top">
+                    <div class="brand">
+                        <div class="brand-logo-badge">
+                            <span class="brand-icon">🛒</span>
+                        </div>
+                        <div class="brand-info">
+                            <div class="brand-title-wrap">
+                                <h1 class="brand-title">توب مارت</h1>
+                                <span class="auto-save-pill" id="autoSaveBadge" title="يتم حفظ كل حركة وتعديل تلقائياً في ذاكرة الهاتف فوراً">
+                                    <span class="save-dot"></span> محفوظ تلقائياً
+                                </span>
+                            </div>
+                            <span class="brand-subtitle">نظام التجهيز ومتابعة الطلبات السريع</span>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button id="themeToggleBtn" class="icon-btn" title="تبديل المظهر (ليلي / نهاري)" aria-label="تبديل المظهر">
+                            <span class="theme-icon">🌙</span>
+                        </button>
+                        <button id="backupBtn" class="icon-btn" title="الإعدادات والنسخ الاحتياطي" aria-label="الإعدادات والنسخ الاحتياطي">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="search-box">
+                    <span class="search-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="text" id="searchInput" aria-label="بحث في الطلبات بالرقم أو الاسم أو المواد" placeholder="بحث بالرقم، اسم الزبون، أو المادة..." autocomplete="off">
+                    <button id="clearSearchBtn" class="clear-search hidden" aria-label="مسح نص البحث">✕</button>
+                </div>
+            </header>
+
+            <!-- KPI Summary Bar (4 Metrics) -->
+            <section class="stats-bar" aria-label="إحصائيات سريعة للطلبات">
+                <div class="stat-card total" title="إجمالي عدد الطلبات المسجلة">
+                    <div class="stat-header">
+                        <span class="stat-icon">📦</span>
+                        <span class="stat-label">الطلبات</span>
+                    </div>
+                    <span class="stat-value" id="statTotalOrders">0</span>
+                </div>
+                <div class="stat-card prepared" title="المواد التي تم تجهيزها بالكامل">
+                    <div class="stat-header">
+                        <span class="stat-icon">✔️</span>
+                        <span class="stat-label">جاهز</span>
+                    </div>
+                    <span class="stat-value" id="statPreparedItems">0</span>
+                </div>
+                <div class="stat-card missing" title="المواد غير المتوفرة (نواقص)">
+                    <div class="stat-header">
+                        <span class="stat-icon">❌</span>
+                        <span class="stat-label">نواقص</span>
+                    </div>
+                    <span class="stat-value" id="statMissingItems">0</span>
+                </div>
+                <div class="stat-card pending" title="المواد المتبقية قيد التجهيز">
+                    <div class="stat-header">
+                        <span class="stat-icon">⏳</span>
+                        <span class="stat-label">متبقي</span>
+                    </div>
+                    <span class="stat-value" id="statPendingItems">0</span>
+                </div>
+            </section>
+
+            <!-- Filter Tabs with Live Badges -->
+            <nav class="filter-tabs" aria-label="تصفية الطلبات">
+                <button class="tab-btn active" data-filter="all">
+                    <span>الكل</span>
+                    <span class="tab-count" id="countFilterAll">0</span>
+                </button>
+                <button class="tab-btn" data-filter="in_progress">
+                    <span>قيد التجهيز ⏳</span>
+                    <span class="tab-count" id="countFilterInProgress">0</span>
+                </button>
+                <button class="tab-btn" data-filter="completed">
+                    <span>مكتمل بالكامل ✔️</span>
+                    <span class="tab-count" id="countFilterCompleted">0</span>
+                </button>
+                <button class="tab-btn" data-filter="has_missing">
+                    <span>يتضمن نواقص ❌</span>
+                    <span class="tab-count" id="countFilterHasMissing">0</span>
+                </button>
+            </nav>
+
+            <!-- Main Orders List -->
+            <main class="orders-container" id="ordersList">
+                <!-- Dynamically generated order cards -->
+            </main>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state hidden">
+                <div class="empty-icon-wrap">
+                    <span class="empty-icon">🛍️</span>
+                </div>
+                <h3 id="emptyStateTitle">لا توجد طلبات حالياً</h3>
+                <p id="emptyStateDesc">اضغط على زر "طلب جديد" بالأسفل لبدء تسجيل وتجهيز طلبات الزبائن بكل سهولة ودقة.</p>
+                <button id="emptyStateAddBtn" class="btn btn-primary empty-action-btn">
+                    <span>+ إضافة طلب جديد</span>
+                </button>
+            </div>
+
+            <!-- Floating Action Button (FAB) -->
+            <button id="openAddModalBtn" class="fab-btn" aria-label="إضافة طلب جديد">
+                <span class="fab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="fab-text">طلب جديد</span>
+            </button>
+        </div>
+
+        <!-- ================= ORDER DETAIL / PACKING SCREEN ================= -->
+        <div id="orderDetailView" class="detail-view-overlay hidden">
+            <div class="detail-container">
+                <!-- Top Navigation & Action Header -->
+                <div class="detail-header">
+                    <button id="closeDetailViewBtn" class="back-btn" title="العودة لشاشة الطلبات الرئيسية">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        <span>عودة للطلبات</span>
+                    </button>
+
+                    <div class="detail-order-number-pill" id="detailOrderCode">
+                        #101
+                    </div>
+
+                    <div class="detail-header-actions">
+                        <button id="headerCompleteBtn" class="icon-btn-success" title="تأشير الطلب كـ منجز">
+                            ✅ إنهاء
+                        </button>
+                        <button id="editOrderInfoBtn" class="icon-btn-secondary" title="تعديل بيانات الزبون">
+                            ✏️ تعديل
+                        </button>
+                        <button id="deleteOrderDetailBtn" class="icon-btn-danger" title="حذف الطلب نهائياً">
+                            🗑️ حذف
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customer Details & Quick Contact Card -->
+                <div class="customer-banner">
+                    <div class="customer-main-info">
+                        <div class="customer-phone-row">
+                            <span class="phone-label-tag">هاتف الزبون:</span>
+                            <h2 id="detailCustomerPhone" dir="ltr" class="phone-heading">07700000000</h2>
+                        </div>
+                        <div class="customer-meta-row">
+                            <span id="detailCustomerName" class="name-subheading">الزبون: -</span>
+                            <span id="detailAppSource" class="source-badge">المصدر: واتساب</span>
+                            <span id="detailCreatedAt" class="time-badge">منذ قليل</span>
+                        </div>
+
+                        <!-- Customer Delivery Address / Location Banner -->
+                        <div id="detailCustomerAddressWrap" class="customer-address-banner hidden">
+                            <span class="address-icon">📍</span>
+                            <div class="address-text-group">
+                                <span class="address-label">العنوان / الموقع:</span>
+                                <span id="detailCustomerAddressText" class="address-val"></span>
+                            </div>
+                        </div>
+
+                        <!-- Eye-catching Order Notes Banner -->
+                        <div id="detailOrderNotesWrap" class="customer-notes-callout hidden">
+                            <div class="notes-callout-header">
+                                <span class="notes-icon">📝</span>
+                                <span class="notes-title">ملاحظات الطلب والتوصيل:</span>
+                            </div>
+                            <p id="detailOrderNotesText" class="notes-content"></p>
+                        </div>
+                    </div>
+
+                    <!-- Direct Action Button: Report -->
+                    <div class="customer-quick-contact">
+                        <button id="openShareReportBtn" class="contact-pill report" title="تجهيز ومشاركة تقرير بالمواد المجهزة والنواقص">
+                            <span>📋 إرسال ومشاركة تقرير الطلب (واتساب)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Product Item Form (Fast Supermarket Packing Input) -->
+                <div class="add-item-box">
+                    <label class="box-label" for="newItemInput">إضافة مادة للطلب (الاسم والكمية):</label>
+                    <form id="addItemForm" class="add-item-form-grid">
+                        <div class="input-with-clear">
+                            <input type="text" id="newItemInput" aria-label="اسم المنتج" placeholder="اسم المنتج (مثال: حليب المراعي 1 لتر)..." autocomplete="off" required>
+                        </div>
+                        <div class="qty-stepper-wrap">
+                            <button type="button" id="qtyMinusBtn" class="qty-step-btn" title="إنقاص الكمية">-</button>
+                            <input type="number" id="newItemQtyInput" aria-label="الكمية" value="1" min="1" max="999" required>
+                            <button type="button" id="qtyPlusBtn" class="qty-step-btn" title="زيادة الكمية">+</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary add-item-btn">
+                            <span>+ إضافة</span>
+                        </button>
+                    </form>
+
+                    <!-- Fast Multi-Line Text Smart Parser Trigger -->
+                    <div class="add-item-helper-row">
+                        <button type="button" id="openPasteMultiBtn" class="btn-link-sm">
+                            📋 لصق قائمة بالكامل من الواتساب (تحليل تلقائي ذكي)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Packing Progress Bar (Tri-Color: Prepared / Missing / Pending) -->
+                <div class="packing-progress-bar">
+                    <div class="progress-labels">
+                        <div class="progress-counters">
+                            <span id="detailPreparedCount" class="counter-badge green">جاهز: 0</span>
+                            <span id="detailMissingCount" class="counter-badge red">نواقص: 0</span>
+                            <span id="detailPendingCount" class="counter-badge amber">متبقي: 0</span>
+                        </div>
+                        <span id="detailTotalCount" class="total-badge">الإجمالي: 0</span>
+                    </div>
+                    <div class="progress-bar-bg" aria-label="نسب الإنجاز">
+                        <div id="detailFillPrepared" class="progress-bar-fill-prepared" style="width: 0%" title="المجهز"></div>
+                        <div id="detailFillMissing" class="progress-bar-fill-missing" style="width: 0%" title="النواقص"></div>
+                    </div>
+                </div>
+
+                <!-- Packing Section Header & Sub-filter -->
+                <div class="packing-section-header">
+                    <div class="packing-section-title-wrap">
+                        <h3 class="packing-section-title">قائمة المواد والتجهيز</h3>
+                        <span class="packing-hint">انقر على المادة لتأشيرها، أو استخدم الأزرار السريعة</span>
+                    </div>
+
+                    <!-- Quick Bulk Action -->
+                    <div class="packing-header-tools">
+                        <button id="markAllRemainingReadyBtn" class="btn-tool-sm" title="تأشير كافة المواد المتبقية كـ جاهز بنقرة واحدة">
+                            ✔️ تجهيز الكل
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sub-filter pills for items inside the order -->
+                <div class="item-filter-tabs">
+                    <button class="item-filter-btn active" data-item-filter="all">الكل (<span id="itemFilterAllCount">0</span>)</button>
+                    <button class="item-filter-btn" data-item-filter="pending">المتبقي ⏳ (<span id="itemFilterPendingCount">0</span>)</button>
+                    <button class="item-filter-btn" data-item-filter="prepared">الجاهز ✔️ (<span id="itemFilterPreparedCount">0</span>)</button>
+                    <button class="item-filter-btn" data-item-filter="missing">النواقص ❌ (<span id="itemFilterMissingCount">0</span>)</button>
+                </div>
+
+                <!-- Packing Checklist Items List -->
+                <div id="detailItemsList" class="packing-items-list">
+                    <!-- Checklist cards rendered dynamically -->
+                </div>
+
+                <!-- Bottom Sticky / Fixed Complete Order Action Bar -->
+                <div class="complete-order-action-wrap">
+                    <button id="toggleCompleteOrderBtn" class="btn btn-complete-order" title="تأشير الطلب كـ منجز ومكتمل وترحيله من قيد التجهيز">
+                        <span id="completeOrderBtnIcon" class="btn-icon">✅</span>
+                        <span id="completeOrderBtnText" class="btn-text">تم تجهيز الطلب (ترحيل للطلبات المكتملة)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ADD / EDIT ORDER MODAL ================= -->
+        <div id="orderModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">إضافة طلب جديد</h2>
+                    <button id="closeModalBtn" class="close-btn" aria-label="إغلاق">✕</button>
+                </div>
+                <form id="orderForm" class="modal-body">
+                    <input type="hidden" id="editOrderId">
+
+                    <div class="form-group">
+                        <label for="customerPhone">رقم هاتف الزبون <span class="required">*</span></label>
+                        <div class="input-prefix-wrap">
+                            <input type="tel" id="customerPhone" placeholder="مثال: 07701234567" dir="ltr" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerName">اسم الزبون <span class="optional-tag">(اختياري)</span></label>
+                        <input type="text" id="customerName" placeholder="مثال: أبو أحمد / أم سارة...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerAddress">📍 عنوان وموقع الزبون <span class="optional-tag">(المنطقة / الشارع / نقطة دالة)</span></label>
+                        <input type="text" id="customerAddress" placeholder="مثال: المنصور، شارع 14 رمضان، قرب جامع الرواد...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appSource">مصدر الطلب <span class="optional-tag">(المنصة)</span></label>
+                        <select id="appSource">
+                            <option value="واتساب (WhatsApp)">💬 واتساب (WhatsApp)</option>
+                            <option value="انستغرام (Instagram)">📸 انستغرام (Instagram)</option>
+                            <option value="تطبيق توتو (Toters)">🛵 تطبيق توتو (Toters)</option>
+                            <option value="تطبيق طلبات (Talabat)">📦 تطبيق طلبات (Talabat)</option>
+                            <option value="تطبيق السريع (Alsaree3)">⚡ تطبيق السريع</option>
+                            <option value="ماسنجر (Messenger)">⚡ فيسبوك ماسنجر</option>
+                            <option value="اتصال هاتفي مباشر">📞 اتصال مباشر</option>
+                            <option value="زبون مباشر في المحل">🛒 مباشر في المارت</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orderNotes">📝 ملاحظات الطلب والتوصيل <span class="optional-tag">(مثل: مستعجل، مواصفات خاصة، كاش...)</span></label>
+                        <input type="text" id="orderNotes" placeholder="مثال: يرجى التوصيل قبل المغرب، الطماطم ناضجة، كاش...">
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" id="cancelModalBtn" class="btn btn-secondary">إلغاء</button>
+                        <button type="submit" class="btn btn-primary" id="saveOrderBtn">
+                            <span>حفظ والبدء بالتجهيز 🚀</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= PASTE MULTI-LINE TEXT MODAL ================= -->
+        <div id="pasteMultiModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <h2>📋 لصق قائمة الطلبات (تحليل ذكي)</h2>
+                    <button id="closePasteMultiBtn" class="close-btn" aria-label="إغلاق">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">
+                        ألصق نص رسالة الزبون كما هي من الواتساب. سيقوم النظام <strong>تلقائياً باستخراج الكميات وأسماء المواد</strong> بدقة (مثال: "3 حليب المراعي" أو "طماطم 2 كيلو"):
+                    </p>
+                    <textarea id="multiTextPasteInput" aria-label="نص القائمة المنسوخة" rows="8" placeholder="مثال:
+3 حليب المراعي
+2 كولا قزاز
+1 زيت عافية
+شيبس ليز بالجبنة 4
+كيلو موز"></textarea>
+                    <div class="modal-actions">
+                        <button type="button" id="cancelPasteMultiBtn" class="btn btn-secondary">إلغاء</button>
+                        <button type="button" id="submitPasteMultiBtn" class="btn btn-primary">
+                            <span>استخراج وإضافة للقائمة ✔️</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SHARE / WHATSAPP REPORT MODAL ================= -->
+        <div id="shareReportModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <h2>📋 تقرير تجهيز الطلب</h2>
+                    <button id="closeShareReportBtn" class="close-btn" aria-label="إغلاق">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">
+                        معاينة تقرير الطلب المعد للإرسال للزبون أو الدليفري مع تفاصيل المواد الجاهزة والنواقص:
+                    </p>
+                    <div class="report-preview-box" id="reportPreviewContent" dir="rtl">
+                        <!-- Preview text inserted here -->
+                    </div>
+                    <div class="modal-actions-stacked">
+                        <button type="button" id="sendWhatsAppReportBtn" class="btn btn-whatsapp-action">
+                            <span>💬 إرسال عبر الواتساب مباشرة</span>
+                        </button>
+                        <div class="modal-actions">
+                            <button type="button" id="copyReportTextBtn" class="btn btn-secondary">
+                                📋 نسخ نص التقرير
+                            </button>
+                            <button type="button" id="cancelShareReportBtn" class="btn btn-outline">
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SETTINGS & BACKUP MODAL ================= -->
+        <div id="backupModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <h2>⚙️ الإعدادات وإدارة البيانات</h2>
+                    <button id="closeBackupModalBtn" class="close-btn" aria-label="إغلاق">✕</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Preferences Section -->
+                    <div class="settings-section">
+                        <h4 class="settings-section-title">التفضيلات والتفاعل</h4>
+                        <div class="setting-toggle-row">
+                            <div class="setting-text">
+                                <span class="setting-name">🔊 الأصوات التفاعلية</span>
+                                <span class="setting-desc">نغمة خفيفة عند تأشير أو إكمال التجهيز</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="soundToggleInput" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="setting-toggle-row">
+                            <div class="setting-text">
+                                <span class="setting-name">📳 الاهتزاز عند اللمس</span>
+                                <span class="setting-desc">نبضة لمسية في الهاتف لتأكيد النقرات</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="hapticToggleInput" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Backup & Storage Section -->
+                    <div class="settings-section">
+                        <h4 class="settings-section-title">النسخ الاحتياطي والذاكرة</h4>
+                        <p class="modal-description">جميع البيانات محفوظة محلياً في ذاكرة جهازك بدون إنترنت.</p>
+
+                        <div class="backup-actions">
+                            <button id="exportDataBtn" class="btn btn-outline">
+                                📥 تصدير نسخة احتياطية (ملف JSON)
+                            </button>
+
+                            <label class="btn btn-outline file-label">
+                                📤 استعادة نسخة احتياطية من ملف
+                                <input type="file" id="importFileInput" accept=".json" class="hidden">
+                            </label>
+
+                            <button id="clearCompletedBtn" class="btn btn-warning">
+                                🧹 حذف الطلبات المكتملة فقط
+                            </button>
+
+                            <button id="clearAllBtn" class="btn btn-danger">
+                                ⚠️ مسح كافة الطلبات والبدء من جديد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= NOTIFICATION TOAST ================= -->
+        <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script src="app.js"></script>
+
+    <!-- Register PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
