@@ -355,14 +355,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="orderAmount">💰 مبلغ الطلب <span class="required">*</span></label>
-                        <div class="input-amount-wrap">
-                            <input type="number" id="orderAmount" placeholder="مثال: 25000" min="0" step="500" required>
-                            <span class="amount-currency-badge">د.ع</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
                         <label for="customerAddress">📍 عنوان وموقع الزبون <span class="optional-tag">(المنطقة / الشارع / نقطة دالة)</span></label>
                         <input type="text" id="customerAddress" placeholder="مثال: المنصور، شارع 14 رمضان، قرب جامع الرواد...">
                     </div>
@@ -460,6 +452,43 @@
                                 إغلاق
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= COMPLETE ORDER MODAL (with Amount Entry) ================= -->
+        <div id="completeOrderModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-content modal-complete">
+                <div class="modal-header complete-modal-header">
+                    <h2>✅ تأكيد إنهاء الطلب</h2>
+                    <button id="closeCompleteOrderModalBtn" class="close-btn" aria-label="إغلاق">✕</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Order summary inside modal -->
+                    <div class="complete-order-summary" id="completeOrderSummary">
+                        <!-- Filled dynamically -->
+                    </div>
+
+                    <!-- Amount Entry - The Key Step -->
+                    <div class="complete-amount-section">
+                        <label class="complete-amount-label" for="completeOrderAmount">
+                            💰 مبلغ الطلب الإجمالي <span class="required">*</span>
+                        </label>
+                        <div class="input-amount-wrap">
+                            <input type="number" id="completeOrderAmount"
+                                   placeholder="أدخل مبلغ الطلب..." min="0" step="500"
+                                   autocomplete="off" inputmode="numeric">
+                            <span class="amount-currency-badge">د.ع</span>
+                        </div>
+                        <p class="complete-amount-hint">سيتم تسجيل المبلغ وحسابه ضمن المجموع اليومي تلقائياً</p>
+                    </div>
+
+                    <div class="modal-actions-stacked">
+                        <button type="button" id="confirmCompleteOrderBtn" class="btn btn-complete-confirm">
+                            <span>✅ تأكيد وترحيل الطلب للمكتملة</span>
+                        </button>
+                        <button type="button" id="cancelCompleteOrderBtn" class="btn btn-outline">إلغاء</button>
                     </div>
                 </div>
             </div>

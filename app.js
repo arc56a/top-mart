@@ -496,7 +496,8 @@ function setupEventListeners() {
     // Global Keybindings (ESC to close modals or detail view)
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (!shareReportModal.classList.contains('hidden')) shareReportModal.classList.add('hidden');
+            if (completeOrderModal && !completeOrderModal.classList.contains('hidden')) closeCompleteOrderModal();
+            else if (!shareReportModal.classList.contains('hidden')) shareReportModal.classList.add('hidden');
             else if (!pasteMultiModal.classList.contains('hidden')) pasteMultiModal.classList.add('hidden');
             else if (!orderModal.classList.contains('hidden')) orderModal.classList.add('hidden');
             else if (!backupModal.classList.contains('hidden')) backupModal.classList.add('hidden');
@@ -523,7 +524,32 @@ function setupEventListeners() {
         });
     }
 
-    // Auto-Save safety hooks: save instantly on window blur, page hide, or app switch
+    // Complete Order Modal - Amount Entry
+    if (confirmCompleteOrderBtn) {
+        confirmCompleteOrderBtn.addEventListener('click', completeOrderWithAmount);
+    }
+    if (cancelCompleteOrderBtn) {
+        cancelCompleteOrderBtn.addEventListener('click', closeCompleteOrderModal);
+    }
+    if (closeCompleteOrderModalBtn) {
+        closeCompleteOrderModalBtn.addEventListener('click', closeCompleteOrderModal);
+    }
+    if (completeOrderModal) {
+        completeOrderModal.addEventListener('click', (e) => {
+            if (e.target === completeOrderModal) closeCompleteOrderModal();
+        });
+        // Allow pressing Enter in amount field to confirm
+        if (completeOrderAmountInput) {
+            completeOrderAmountInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    completeOrderWithAmount();
+                }
+            });
+        }
+    }
+
+    // Auto-Save safety hooks
     window.addEventListener('beforeunload', () => saveOrders());
     window.addEventListener('pagehide', () => saveOrders());
     document.addEventListener('visibilitychange', () => {
@@ -543,7 +569,6 @@ function openOrderModal(orderId = null) {
         customerPhoneInput.value = order.customerPhone || '';
         customerNameInput.value = order.customerName || '';
         if (customerAddressInput) customerAddressInput.value = order.customerAddress || '';
-        if (orderAmountInput) orderAmountInput.value = order.orderAmount || '';
         if (orderCategoryInput) orderCategoryInput.value = order.orderCategory || 'دليفري';
         appSourceInput.value = order.appSource || 'واتساب (WhatsApp)';
         orderNotesInput.value = order.orderNotes || '';
@@ -551,16 +576,11 @@ function openOrderModal(orderId = null) {
         modalTitle.textContent = 'إضافة طلب جديد';
         editOrderIdInput.value = '';
         if (customerAddressInput) customerAddressInput.value = '';
-        if (orderAmountInput) orderAmountInput.value = '';
         if (orderCategoryInput) orderCategoryInput.value = 'دليفري';
         appSourceInput.value = 'واتساب (WhatsApp)';
     }
     orderModal.classList.remove('hidden');
-    // Focus amount field first (it's the most important new field)
-    setTimeout(() => {
-        if (orderAmountInput) orderAmountInput.focus();
-        else customerPhoneInput.focus();
-    }, 150);
+    setTimeout(() => customerPhoneInput.focus(), 150);
 }
 
 function closeOrderModal() {
@@ -581,12 +601,6 @@ function handleOrderFormSubmit(e) {
     if (!phone) {
         showToast('يرجى إدخال رقم هاتف الزبون!');
         customerPhoneInput.focus();
-        return;
-    }
-
-    if (!amount || amount <= 0) {
-        showToast('يرجى إدخال مبلغ الطلب 💰');
-        if (orderAmountInput) orderAmountInput.focus();
         return;
     }
 
@@ -1011,11 +1025,21 @@ function checkIfAllItemsChecked(order) {
     }
 }
 
+// ================= ORDER COMPLETION FLOW (with Amount Modal) =================
+let pendingCompleteOrderId = null;
+const completeOrderModal = document.getElementById('completeOrderModal');
+const completeOrderSummary = document.getElementById('completeOrderSummary');
+const completeOrderAmountInput = document.getElementById('completeOrderAmount');
+const confirmCompleteOrderBtn = document.getElementById('confirmCompleteOrderBtn');
+const cancelCompleteOrderBtn = document.getElementById('cancelCompleteOrderBtn');
+const closeCompleteOrderModalBtn = document.getElementById('closeCompleteOrderModalBtn');
+
 function toggleOrderCompletion(orderId) {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
     if (order.isCompleted) {
+        // Reopen the order — no amount modal needed
         order.isCompleted = false;
         order.completedAt = null;
         saveOrders();
@@ -1025,20 +1049,106 @@ function toggleOrderCompletion(orderId) {
         if (activeOrderId === orderId) {
             updateDetailCompleteButton(order);
         }
+        renderMainList();
     } else {
-        order.isCompleted = true;
-        order.completedAt = new Date().toISOString();
-        saveOrders();
-        triggerHaptic(40);
-        playSynthesizedSound('complete');
-        showToast('تم تجهيز الطلب ونقله إلى الطلبات المكتملة بنجاح ✅');
-        if (activeOrderId === orderId) {
-            closeOrderDetail();
-            return;
-        }
+        // Show the completion modal to collect the amount first
+        openCompleteOrderModal(orderId);
+    }
+}
+
+function openCompleteOrderModal(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    pendingCompleteOrderId = orderId;
+
+    // Build order summary for the modal
+    const totalItems = order.items.length;
+    const preparedCount = order.items.filter(i => i.status === 'prepared').length;
+    const missingCount = order.items.filter(i => i.status === 'missing').length;
+
+    if (completeOrderSummary) {
+        completeOrderSummary.innerHTML = `
+            <div class="complete-summary-row">
+                <span class="csummary-icon">📦</span>
+                <div class="csummary-info">
+                    <span class="csummary-label">رقم الطلب</span>
+                    <span class="csummary-val">${order.code || ''}</span>
+                </div>
+            </div>
+            ${order.customerName ? `
+            <div class="complete-summary-row">
+                <span class="csummary-icon">👤</span>
+                <div class="csummary-info">
+                    <span class="csummary-label">الزبون</span>
+                    <span class="csummary-val">${order.customerName}</span>
+                </div>
+            </div>` : ''}
+            <div class="complete-summary-row">
+                <span class="csummary-icon">📞</span>
+                <div class="csummary-info">
+                    <span class="csummary-label">الهاتف</span>
+                    <span class="csummary-val" dir="ltr">${order.customerPhone}</span>
+                </div>
+            </div>
+            <div class="complete-summary-row">
+                <span class="csummary-icon">✅</span>
+                <div class="csummary-info">
+                    <span class="csummary-label">حالة التجهيز</span>
+                    <span class="csummary-val">${preparedCount} جاهز ${missingCount > 0 ? '| <span style="color:var(--danger-color)">' + missingCount + ' نافد</span>' : ''} من ${totalItems}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Pre-fill amount if already set (e.g. from previous edit)
+    if (completeOrderAmountInput) {
+        completeOrderAmountInput.value = order.orderAmount && order.orderAmount > 0 ? order.orderAmount : '';
+    }
+
+    if (completeOrderModal) {
+        completeOrderModal.classList.remove('hidden');
+        setTimeout(() => {
+            if (completeOrderAmountInput) completeOrderAmountInput.focus();
+        }, 200);
+    }
+}
+
+function closeCompleteOrderModal() {
+    if (completeOrderModal) completeOrderModal.classList.add('hidden');
+    pendingCompleteOrderId = null;
+}
+
+function completeOrderWithAmount() {
+    if (!pendingCompleteOrderId) return;
+
+    const amountVal = completeOrderAmountInput ? parseFloat(completeOrderAmountInput.value) : 0;
+
+    if (!amountVal || amountVal <= 0) {
+        showToast('يرجى إدخال مبلغ الطلب 💰');
+        if (completeOrderAmountInput) completeOrderAmountInput.focus();
+        return;
+    }
+
+    const order = orders.find(o => o.id === pendingCompleteOrderId);
+    if (!order) return;
+
+    order.orderAmount = amountVal;
+    order.isCompleted = true;
+    order.completedAt = new Date().toISOString();
+    saveOrders();
+    closeCompleteOrderModal();
+    triggerHaptic(40);
+    playSynthesizedSound('complete');
+    showToast(`تم تجهيز الطلب وتسجيل مبلغ ${Number(amountVal).toLocaleString('ar-IQ')} د.ع ✅`);
+
+    if (activeOrderId === pendingCompleteOrderId) {
+        closeOrderDetail();
+        return;
     }
     renderMainList();
 }
+
 
 function updateDetailCompleteButton(order) {
     if (!toggleCompleteOrderBtn) return;
