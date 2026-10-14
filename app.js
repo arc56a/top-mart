@@ -41,6 +41,9 @@ const statTotalOrders = document.getElementById('statTotalOrders');
 const statPreparedItems = document.getElementById('statPreparedItems');
 const statMissingItems = document.getElementById('statMissingItems');
 const statPendingItems = document.getElementById('statPendingItems');
+const statCompletedCount = document.getElementById('statCompletedCount');
+const statTotalRevenue = document.getElementById('statTotalRevenue');
+const statActiveRevenue = document.getElementById('statActiveRevenue');
 
 const countFilterAll = document.getElementById('countFilterAll');
 const countFilterInProgress = document.getElementById('countFilterInProgress');
@@ -107,6 +110,8 @@ const customerNameInput = document.getElementById('customerName');
 const customerAddressInput = document.getElementById('customerAddress');
 const appSourceInput = document.getElementById('appSource');
 const orderNotesInput = document.getElementById('orderNotes');
+const orderAmountInput = document.getElementById('orderAmount');
+const orderCategoryInput = document.getElementById('orderCategory');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const cancelModalBtn = document.getElementById('cancelModalBtn');
 
@@ -363,8 +368,10 @@ function setupEventListeners() {
 
     // Search Input
     searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value.trim().toLowerCase();
-        clearSearchBtn.classList.toggle('hidden', searchQuery === '');
+        // Preserve original casing for Arabic; only lowercase for Latin matching
+        const raw = e.target.value.trim();
+        searchQuery = raw.toLowerCase();
+        clearSearchBtn.classList.toggle('hidden', raw === '');
         renderMainList();
     });
 
@@ -461,6 +468,14 @@ function setupEventListeners() {
     sendWhatsAppReportBtn.addEventListener('click', sendWhatsAppReport);
     copyReportTextBtn.addEventListener('click', copyReportText);
 
+    // Copy Delivery Info for Driver (phone + address)
+    const copyDeliveryInfoBtn = document.getElementById('copyDeliveryInfoBtn');
+    if (copyDeliveryInfoBtn) {
+        copyDeliveryInfoBtn.addEventListener('click', () => {
+            if (activeOrderId) copyDeliveryInfo(activeOrderId);
+        });
+    }
+
     // Settings Modal
     backupBtn.addEventListener('click', () => backupModal.classList.remove('hidden'));
     closeBackupModalBtn.addEventListener('click', () => backupModal.classList.add('hidden'));
@@ -489,6 +504,25 @@ function setupEventListeners() {
         }
     });
 
+    // Quick Clear Completed Orders button (with confirmation)
+    const quickClearBtn = document.getElementById('quickClearBtn');
+    if (quickClearBtn) {
+        quickClearBtn.addEventListener('click', () => {
+            const completed = orders.filter(o => o.isCompleted);
+            if (completed.length === 0) {
+                showToast('لا توجد طلبات مكتملة لحذفها!');
+                return;
+            }
+            if (confirm(`هل أنت متأكد من مسح ${completed.length} طلب مكتمل\nسيتم حذفها نهائياً ولا يمكن التراجع.`)) {
+                orders = orders.filter(o => !o.isCompleted);
+                saveOrders();
+                renderMainList();
+                triggerHaptic(30);
+                showToast(`تم مسح ${completed.length} طلب مكتمل 🧹`);
+            }
+        });
+    }
+
     // Auto-Save safety hooks: save instantly on window blur, page hide, or app switch
     window.addEventListener('beforeunload', () => saveOrders());
     window.addEventListener('pagehide', () => saveOrders());
@@ -509,16 +543,24 @@ function openOrderModal(orderId = null) {
         customerPhoneInput.value = order.customerPhone || '';
         customerNameInput.value = order.customerName || '';
         if (customerAddressInput) customerAddressInput.value = order.customerAddress || '';
+        if (orderAmountInput) orderAmountInput.value = order.orderAmount || '';
+        if (orderCategoryInput) orderCategoryInput.value = order.orderCategory || 'دليفري';
         appSourceInput.value = order.appSource || 'واتساب (WhatsApp)';
         orderNotesInput.value = order.orderNotes || '';
     } else {
         modalTitle.textContent = 'إضافة طلب جديد';
         editOrderIdInput.value = '';
         if (customerAddressInput) customerAddressInput.value = '';
+        if (orderAmountInput) orderAmountInput.value = '';
+        if (orderCategoryInput) orderCategoryInput.value = 'دليفري';
         appSourceInput.value = 'واتساب (WhatsApp)';
     }
     orderModal.classList.remove('hidden');
-    setTimeout(() => customerPhoneInput.focus(), 150);
+    // Focus amount field first (it's the most important new field)
+    setTimeout(() => {
+        if (orderAmountInput) orderAmountInput.focus();
+        else customerPhoneInput.focus();
+    }, 150);
 }
 
 function closeOrderModal() {
@@ -531,12 +573,20 @@ function handleOrderFormSubmit(e) {
     const phone = customerPhoneInput.value.trim();
     const name = customerNameInput.value.trim();
     const address = customerAddressInput ? customerAddressInput.value.trim() : '';
+    const amount = orderAmountInput ? parseFloat(orderAmountInput.value) : 0;
+    const category = orderCategoryInput ? orderCategoryInput.value.trim() : 'دليفري';
     const source = appSourceInput.value.trim();
     const notes = orderNotesInput.value.trim();
 
     if (!phone) {
         showToast('يرجى إدخال رقم هاتف الزبون!');
         customerPhoneInput.focus();
+        return;
+    }
+
+    if (!amount || amount <= 0) {
+        showToast('يرجى إدخال مبلغ الطلب 💰');
+        if (orderAmountInput) orderAmountInput.focus();
         return;
     }
 
@@ -549,6 +599,8 @@ function handleOrderFormSubmit(e) {
             order.customerPhone = phone;
             order.customerName = name;
             order.customerAddress = address;
+            order.orderAmount = amount;
+            order.orderCategory = category;
             order.appSource = source;
             order.orderNotes = notes;
             saveOrders();
@@ -568,6 +620,8 @@ function handleOrderFormSubmit(e) {
             customerPhone: phone,
             customerName: name || '',
             customerAddress: address || '',
+            orderAmount: amount,
+            orderCategory: category || 'دليفري',
             appSource: source || 'واتساب (WhatsApp)',
             orderNotes: notes,
             createdAt: new Date().toISOString(),
@@ -624,6 +678,36 @@ function renderOrderDetailHeader(order) {
     detailCustomerName.textContent = order.customerName ? `الزبون: ${order.customerName}` : 'الزبون: غير محدد';
     detailAppSource.textContent = order.appSource || 'واتساب (WhatsApp)';
     detailCreatedAt.textContent = formatRelativeTime(order.createdAt);
+
+    // Show Amount Badge prominently
+    let amountBadge = document.getElementById('detailAmountBadge');
+    if (!amountBadge) {
+        amountBadge = document.createElement('span');
+        amountBadge.id = 'detailAmountBadge';
+        amountBadge.className = 'detail-amount-badge';
+        detailCustomerName.parentNode.insertBefore(amountBadge, detailCustomerName.nextSibling);
+    }
+    if (order.orderAmount && order.orderAmount > 0) {
+        amountBadge.textContent = `💰 ${Number(order.orderAmount).toLocaleString('ar-IQ')} د.ع`;
+        amountBadge.classList.remove('hidden');
+    } else {
+        amountBadge.classList.add('hidden');
+    }
+
+    // Show Category Badge
+    let catBadge = document.getElementById('detailCategoryBadge');
+    if (!catBadge) {
+        catBadge = document.createElement('span');
+        catBadge.id = 'detailCategoryBadge';
+        catBadge.className = 'detail-category-badge';
+        detailAppSource.parentNode.insertBefore(catBadge, detailAppSource.nextSibling);
+    }
+    if (order.orderCategory) {
+        catBadge.textContent = `📂 ${order.orderCategory}`;
+        catBadge.classList.remove('hidden');
+    } else {
+        catBadge.classList.add('hidden');
+    }
 
     // Customer Delivery Address / Location
     if (order.customerAddress && order.customerAddress.trim() !== '') {
@@ -1087,6 +1171,10 @@ function generateWhatsAppReportText(order) {
     msg += `📦 *رقم الطلب:* ${orderCode}\n`;
     if (order.customerName) msg += `👤 *الزبون:* ${order.customerName}\n`;
     msg += `📞 *الهاتف:* ${order.customerPhone}\n`;
+    if (order.orderAmount && order.orderAmount > 0) {
+        msg += `💰 *مبلغ الطلب:* ${Number(order.orderAmount).toLocaleString('ar-IQ')} د.ع\n`;
+    }
+    if (order.orderCategory) msg += `📂 *القسم:* ${order.orderCategory}\n`;
     if (order.customerAddress && order.customerAddress.trim() !== '') {
         msg += `📍 *العنوان:* ${order.customerAddress}\n`;
     }
@@ -1168,6 +1256,70 @@ function copyReportText() {
     }).catch(() => {
         showToast('تعذر النسخ التلقائي!');
     });
+}
+
+// ================= COPY DELIVERY INFO FOR DRIVER =================
+function copyDeliveryInfo(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const phone = (order.customerPhone || '').trim();
+    const name = (order.customerName || '').trim();
+    const address = (order.customerAddress || '').trim();
+    const notes = (order.orderNotes || '').trim();
+
+    if (!phone && !address) {
+        showToast('لا يوجد رقم أو عنوان لهذا الطلب!');
+        return;
+    }
+
+    let text = '';
+    if (name) text += `الزبون: ${name}\n`;
+    if (phone) text += `الهاتف: ${phone}\n`;
+    if (address) text += `العنوان: ${address}\n`;
+    if (notes) text += `ملاحظات: ${notes}\n`;
+    text = text.trim();
+
+    const btn = document.getElementById('copyDeliveryInfoBtn');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            triggerHaptic(25);
+            playSynthesizedSound('check');
+            showToast('تم نسخ بيانات التوصيل للمندوب 📋✔️');
+            if (btn) {
+                const origHTML = btn.innerHTML;
+                btn.innerHTML = '<span>✔️ تم النسخ!</span>';
+                btn.style.background = 'linear-gradient(135deg, var(--success-color), var(--success-hover))';
+                setTimeout(() => {
+                    btn.innerHTML = origHTML;
+                    btn.style.background = '';
+                }, 2000);
+            }
+        }).catch(() => {
+            fallbackCopyText(text);
+        });
+    } else {
+        fallbackCopyText(text);
+    }
+}
+
+function fallbackCopyText(text) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        triggerHaptic(20);
+        showToast('تم نسخ بيانات التوصيل 📋');
+    } catch (e) {
+        showToast('تعذر النسخ، يرجى النسخ يدوياً');
+    }
 }
 
 // ================= MAIN ORDERS LIST & STATS =================
@@ -1262,12 +1414,18 @@ function renderKPIsAndTabCounts() {
     let countInProgress = 0;
     let countCompleted = 0;
     let countHasMissing = 0;
+    let totalRevenue = 0;
+    let activeRevenue = 0;
 
     orders.forEach(order => {
+        const amt = Number(order.orderAmount) || 0;
         if (order.isCompleted) {
             countCompleted++;
+            totalRevenue += amt;
         } else {
             countInProgress++;
+            activeRevenue += amt;
+            totalRevenue += amt;
             if (order.items && order.items.some(i => i.status === 'missing')) {
                 countHasMissing++;
             }
@@ -1291,6 +1449,11 @@ function renderKPIsAndTabCounts() {
     countFilterInProgress.textContent = countInProgress;
     countFilterCompleted.textContent = countCompleted;
     countFilterHasMissing.textContent = countHasMissing;
+
+    // Update Revenue Strip
+    if (statCompletedCount) statCompletedCount.textContent = countCompleted;
+    if (statTotalRevenue) statTotalRevenue.textContent = formatMoney(totalRevenue);
+    if (statActiveRevenue) statActiveRevenue.textContent = formatMoney(activeRevenue);
 }
 
 function createMainOrderCardHTML(order) {
@@ -1327,6 +1490,7 @@ function createMainOrderCardHTML(order) {
                     <span class="phone-badge">${escapeHTML(order.customerPhone)}</span>
                 </div>
                 <div class="order-card-badges">
+                    ${order.orderCategory ? `<span class="category-badge">${escapeHTML(order.orderCategory)}</span>` : ''}
                     ${order.appSource ? `<span class="source-badge">${escapeHTML(order.appSource)}</span>` : ''}
                     <span class="time-badge">${timeAgo}</span>
                 </div>
@@ -1336,6 +1500,9 @@ function createMainOrderCardHTML(order) {
                 <span class="customer-name-highlight">
                     👤 ${order.customerName ? escapeHTML(order.customerName) : 'زبون بدون اسم'}
                 </span>
+                ${order.orderAmount && order.orderAmount > 0
+                    ? `<span class="card-amount-badge">💰 ${Number(order.orderAmount).toLocaleString('ar-IQ')} د.ع</span>`
+                    : ''}
             </div>
 
             ${order.customerAddress ? `
@@ -1507,4 +1674,9 @@ function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function formatMoney(amount) {
+    if (!amount || amount === 0) return '0 د.ع';
+    return Number(amount).toLocaleString('ar-IQ') + ' د.ع';
 }

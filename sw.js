@@ -1,4 +1,5 @@
-const CACHE_NAME = 'topmart-cache-v1';
+const CACHE_NAME = 'topmart-cache-v3';
+
 const ASSETS = [
   './',
   './index.html',

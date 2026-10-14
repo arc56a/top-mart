@@ -37,9 +37,6 @@
                         <div class="brand-info">
                             <div class="brand-title-wrap">
                                 <h1 class="brand-title">توب مارت</h1>
-                                <span class="auto-save-pill" id="autoSaveBadge" title="يتم حفظ كل حركة وتعديل تلقائياً في ذاكرة الهاتف فوراً">
-                                    <span class="save-dot"></span> محفوظ تلقائياً
-                                </span>
                             </div>
                             <span class="brand-subtitle">نظام التجهيز ومتابعة الطلبات السريع</span>
                         </div>
@@ -102,25 +99,57 @@
                 </div>
             </section>
 
-            <!-- Filter Tabs with Live Badges -->
-            <nav class="filter-tabs" aria-label="تصفية الطلبات">
-                <button class="tab-btn active" data-filter="all">
-                    <span>الكل</span>
-                    <span class="tab-count" id="countFilterAll">0</span>
+            <!-- Revenue & Summary Strip -->
+            <div class="revenue-strip" id="revenueStrip">
+                <div class="revenue-stat">
+                    <span class="rev-icon">✅</span>
+                    <div class="rev-info">
+                        <span class="rev-label">طلبات طلعت</span>
+                        <span class="rev-value" id="statCompletedCount">0</span>
+                    </div>
+                </div>
+                <div class="revenue-divider"></div>
+                <div class="revenue-stat">
+                    <span class="rev-icon">💰</span>
+                    <div class="rev-info">
+                        <span class="rev-label">مجموع المبالغ</span>
+                        <span class="rev-value money" id="statTotalRevenue">0 د.ع</span>
+                    </div>
+                </div>
+                <div class="revenue-divider"></div>
+                <div class="revenue-stat">
+                    <span class="rev-icon">⏳</span>
+                    <div class="rev-info">
+                        <span class="rev-label">قيد التجهيز</span>
+                        <span class="rev-value" id="statActiveRevenue">0 د.ع</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs with Live Badges + Quick Clear -->
+            <div class="filter-tabs-row">
+                <nav class="filter-tabs" aria-label="تصفية الطلبات">
+                    <button class="tab-btn active" data-filter="all">
+                        <span>الكل</span>
+                        <span class="tab-count" id="countFilterAll">0</span>
+                    </button>
+                    <button class="tab-btn" data-filter="in_progress">
+                        <span>قيد التجهيز ⏳</span>
+                        <span class="tab-count" id="countFilterInProgress">0</span>
+                    </button>
+                    <button class="tab-btn" data-filter="completed">
+                        <span>مكتمل ✔️</span>
+                        <span class="tab-count" id="countFilterCompleted">0</span>
+                    </button>
+                    <button class="tab-btn" data-filter="has_missing">
+                        <span>نواقص ❌</span>
+                        <span class="tab-count" id="countFilterHasMissing">0</span>
+                    </button>
+                </nav>
+                <button id="quickClearBtn" class="quick-clear-btn" title="مسح الطلبات المكتملة" aria-label="مسح الطلبات المكتملة">
+                    🧹
                 </button>
-                <button class="tab-btn" data-filter="in_progress">
-                    <span>قيد التجهيز ⏳</span>
-                    <span class="tab-count" id="countFilterInProgress">0</span>
-                </button>
-                <button class="tab-btn" data-filter="completed">
-                    <span>مكتمل بالكامل ✔️</span>
-                    <span class="tab-count" id="countFilterCompleted">0</span>
-                </button>
-                <button class="tab-btn" data-filter="has_missing">
-                    <span>يتضمن نواقص ❌</span>
-                    <span class="tab-count" id="countFilterHasMissing">0</span>
-                </button>
-            </nav>
+            </div>
 
             <!-- Main Orders List -->
             <main class="orders-container" id="ordersList">
@@ -213,10 +242,13 @@
                         </div>
                     </div>
 
-                    <!-- Direct Action Button: Report -->
+                    <!-- Direct Action Buttons: Copy for Driver & WhatsApp Report -->
                     <div class="customer-quick-contact">
+                        <button id="copyDeliveryInfoBtn" class="contact-pill copy-delivery" title="نسخ رقم وعنوان الزبون بنقرة واحدة لإرساله للمندوب">
+                            <span>📋 نسخ (الرقم + العنوان) للمندوب</span>
+                        </button>
                         <button id="openShareReportBtn" class="contact-pill report" title="تجهيز ومشاركة تقرير بالمواد المجهزة والنواقص">
-                            <span>📋 إرسال ومشاركة تقرير الطلب (واتساب)</span>
+                            <span>💬 تقرير الطلب (واتساب)</span>
                         </button>
                     </div>
                 </div>
@@ -323,6 +355,14 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="orderAmount">💰 مبلغ الطلب <span class="required">*</span></label>
+                        <div class="input-amount-wrap">
+                            <input type="number" id="orderAmount" placeholder="مثال: 25000" min="0" step="500" required>
+                            <span class="amount-currency-badge">د.ع</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
                         <label for="customerAddress">📍 عنوان وموقع الزبون <span class="optional-tag">(المنطقة / الشارع / نقطة دالة)</span></label>
                         <input type="text" id="customerAddress" placeholder="مثال: المنصور، شارع 14 رمضان، قرب جامع الرواد...">
                     </div>
@@ -338,6 +378,17 @@
                             <option value="ماسنجر (Messenger)">⚡ فيسبوك ماسنجر</option>
                             <option value="اتصال هاتفي مباشر">📞 اتصال مباشر</option>
                             <option value="زبون مباشر في المحل">🛒 مباشر في المارت</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orderCategory">📂 قسم الطلب <span class="optional-tag">(للتنظيم)</span></label>
+                        <select id="orderCategory">
+                            <option value="دليفري">🛵 دليفري (توصيل للمنزل)</option>
+                            <option value="مباشر">🛒 استلام مباشر من المارت</option>
+                            <option value="أونلاين">📱 طلب أونلاين</option>
+                            <option value="جملة">📦 جملة / كميات كبيرة</option>
+                            <option value="خاص">⭐ طلب خاص / VIP</option>
                         </select>
                     </div>
 

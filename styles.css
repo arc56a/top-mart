@@ -368,8 +368,9 @@ body {
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
     scrollbar-width: none;
+    padding: 0 16px;
 }
 
 .filter-tabs::-webkit-scrollbar {
@@ -1029,6 +1030,8 @@ body {
 
 .customer-quick-contact {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
     padding-top: 12px;
     border-top: 1px solid var(--border-color);
 }
@@ -1063,6 +1066,19 @@ body {
     background: linear-gradient(135deg, #25d366, #128c7e);
     color: #ffffff;
     box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+}
+
+.contact-pill.copy-delivery {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(14, 165, 233, 0.1));
+    color: var(--primary-color);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.contact-pill.copy-delivery:hover {
+    background: linear-gradient(135deg, var(--primary-color), #0ea5e9);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
 }
 
 /* 11. Add Item Form & Packing Checklist */
@@ -1853,6 +1869,209 @@ input:checked + .slider:before {
     white-space: nowrap;
 }
 
+/* ============================================================
+   Revenue Summary Strip
+   ============================================================ */
+.revenue-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin: 0 16px 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.revenue-stat {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    transition: background-color var(--trans-fast);
+}
+
+.revenue-stat:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.rev-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.rev-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.rev-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.rev-value {
+    font-family: var(--font-num);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.rev-value.money {
+    color: var(--success-color);
+}
+
+.revenue-divider {
+    width: 1px;
+    height: 36px;
+    background-color: var(--border-color);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Filter Tabs Row (with Clear Button)
+   ============================================================ */
+.filter-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px 10px;
+}
+
+.filter-tabs-row .filter-tabs {
+    padding: 0;
+    flex: 1;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.filter-tabs-row .filter-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.quick-clear-btn {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-md);
+    color: var(--danger-color);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--trans-fast);
+    flex-shrink: 0;
+}
+
+.quick-clear-btn:hover {
+    background-color: var(--danger-color);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.quick-clear-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================================
+   Amount Input Wrapper in Order Form
+   ============================================================ */
+.input-amount-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-amount-wrap input {
+    flex: 1;
+    padding-left: 54px !important;
+    font-family: var(--font-num);
+    font-size: 18px !important;
+    font-weight: 800;
+    color: var(--success-color) !important;
+    letter-spacing: 0.5px;
+}
+
+.amount-currency-badge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-input);
+    border-right: 1px solid var(--border-color);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--success-color);
+}
+
+/* ============================================================
+   Amount & Category Badges on Order Cards
+   ============================================================ */
+.card-amount-badge {
+    font-family: var(--font-num);
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--success-color);
+    background-color: var(--success-bg);
+    border: 1px solid var(--success-border);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+}
+
+.category-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background-color: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+/* ============================================================
+   Amount & Category Badges on Detail View
+   ============================================================ */
+.detail-amount-badge {
+    font-family: var(--font-num);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--success-color);
+    background: linear-gradient(135deg, var(--success-bg), rgba(16, 185, 129, 0.05));
+    border: 1.5px solid var(--success-border);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+    margin: 4px 0 8px;
+    box-shadow: 0 0 12px var(--success-glow);
+}
+
+.detail-category-badge {
+    font-size: 12px;
+    font-weight: 700;
+    background-color: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+}
+
 /* 14. Animations & Utilities */
 .hidden { display: none !important; }
 
@@ -1874,4 +2093,378 @@ input:checked + .slider:before {
 @keyframes toastPop {
     from { transform: translate(-50%, -20px); opacity: 0; }
     to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+
+/* ============================================================
+   15. MOBILE-FIRST RESPONSIVE DESIGN
+   Full optimization for phones (max 640px)
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+    /* App Shell */
+    body { font-size: 15px; }
+
+    /* Header */
+    .app-header {
+        padding: 10px 12px 8px;
+    }
+
+    .header-top {
+        margin-bottom: 10px;
+    }
+
+    .brand-logo-badge {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .brand-title {
+        font-size: 18px !important;
+    }
+
+    .brand-subtitle {
+        font-size: 10px !important;
+        display: block;
+        max-width: 180px;
+        line-height: 1.3;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Search Box */
+    .search-box input {
+        font-size: 14px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        gap: 6px;
+        padding: 10px 12px;
+    }
+
+    .stat-card {
+        padding: 10px 8px;
+        gap: 4px;
+    }
+
+    .stat-value {
+        font-size: 22px !important;
+    }
+
+    .stat-label {
+        font-size: 9px !important;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+        padding: 0 12px 8px;
+        gap: 5px;
+    }
+
+    .tab-btn {
+        font-size: 11px;
+        padding: 6px 8px;
+        white-space: nowrap;
+    }
+
+    /* Orders Container */
+    .orders-container {
+        padding: 0 12px 100px;
+    }
+
+    /* Order Cards */
+    .order-card {
+        padding: 12px;
+    }
+
+    .phone-badge {
+        font-size: 14px;
+    }
+
+    .order-code-badge {
+        font-size: 10px;
+    }
+
+    .source-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+        /* Truncate long source names on mobile */
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .card-items-preview {
+        font-size: 11px;
+        padding: 8px 10px;
+    }
+
+    .card-complete-btn,
+    .card-reopen-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    /* FAB */
+    .fab-btn {
+        bottom: 16px;
+        left: 16px;
+        padding: 12px 18px;
+        font-size: 14px;
+    }
+
+    /* Detail View */
+    .detail-container {
+        padding: 10px 12px;
+        padding-bottom: 90px;
+    }
+
+    .detail-header {
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .back-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+        gap: 5px;
+    }
+
+    .back-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .detail-order-number-pill {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    /* Detail Header Actions - stack on small screens */
+    .detail-header-actions {
+        gap: 4px;
+    }
+
+    .icon-btn-success,
+    .icon-btn-secondary,
+    .icon-btn-warning,
+    .icon-btn-danger {
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+
+    /* Customer Banner */
+    .customer-banner {
+        padding: 12px;
+    }
+
+    .phone-heading {
+        font-size: 18px !important;
+    }
+
+    .customer-meta-row {
+        gap: 6px;
+    }
+
+    .name-subheading {
+        font-size: 13px;
+    }
+
+    /* Add Item Form */
+    .add-item-box {
+        padding: 12px;
+    }
+
+    .add-item-form-grid {
+        grid-template-columns: 1fr auto auto;
+        gap: 6px;
+    }
+
+    .qty-stepper-wrap {
+        gap: 4px;
+    }
+
+    .qty-step-btn {
+        width: 32px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    #newItemQtyInput {
+        width: 38px;
+        font-size: 14px;
+    }
+
+    .add-item-btn {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* Packing Items */
+    .packing-item-card {
+        padding: 10px 12px;
+    }
+
+    .packing-item-title {
+        font-size: 14px;
+    }
+
+    .check-mark-btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+
+    .delete-item-btn {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+
+    /* Packing Progress Bar */
+    .packing-progress-bar {
+        padding: 10px 0;
+    }
+
+    .counter-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    /* Item Filter Tabs */
+    .item-filter-tabs {
+        gap: 5px;
+    }
+
+    .item-filter-btn {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+
+    /* Section Header */
+    .packing-section-title {
+        font-size: 14px;
+    }
+
+    .packing-hint {
+        font-size: 10px;
+    }
+
+    .btn-tool-sm {
+        font-size: 12px;
+        padding: 7px 10px;
+    }
+
+    /* Complete Order Button */
+    .complete-order-action-wrap {
+        padding: 10px 12px;
+    }
+
+    .btn-complete-order,
+    .btn-reopen-order {
+        font-size: 15px;
+        padding: 14px;
+    }
+
+    /* Modals */
+    .modal-content {
+        margin: 10px;
+        max-height: calc(100dvh - 20px);
+    }
+
+    .modal-header h2 {
+        font-size: 16px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 15px;
+        padding: 11px 12px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+    }
+
+    /* Toast - ensure it doesn't overflow */
+    .toast {
+        font-size: 13px;
+        padding: 10px 18px;
+        white-space: normal;
+        text-align: center;
+        max-width: calc(100vw - 40px);
+    }
+
+    /* Backup Actions */
+    .backup-actions .btn {
+        font-size: 13px;
+        padding: 11px 14px;
+    }
+
+    /* Safe area padding for notched phones (iPhone X+) */
+    .detail-container {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .orders-container {
+        padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .fab-btn {
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .complete-order-action-wrap {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Very small screens (< 380px: iPhone SE, old Androids) */
+@media (max-width: 380px) {
+    .brand-title { font-size: 15px !important; }
+    .brand-subtitle { display: none; }
+
+    .detail-header-actions .icon-btn-success .btn-text,
+    .detail-header-actions .icon-btn-secondary .btn-text,
+    .detail-header-actions .icon-btn-danger .btn-text {
+        display: none;
+    }
+
+    .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 6px;
+    }
+
+    .tab-btn {
+        flex-shrink: 0;
+    }
+
+    .phone-badge { font-size: 13px; }
+
+    .add-item-form-grid {
+        grid-template-columns: 1fr auto;
+    }
+
+    .qty-stepper-wrap {
+        display: none;
+    }
 }
